@@ -13,27 +13,53 @@ if (!$product) {
 
 $current_product_id = $product->get_id();
 
+/**
+ * Get related products first.
+ */
 $related_ids = wc_get_related_products($current_product_id, 10);
 
-if (empty($related_ids)) {
-  $related_products = wc_get_products([
+/**
+ * Clean related IDs:
+ * - remove current product
+ * - remove duplicates
+ */
+$related_ids = array_filter(array_unique($related_ids), function ($id) use ($current_product_id) {
+  return (int) $id !== (int) $current_product_id;
+});
+
+$related_products = [];
+
+if (!empty($related_ids)) {
+  foreach ($related_ids as $related_id) {
+    $related_product = wc_get_product($related_id);
+
+    if ($related_product && $related_product->is_visible()) {
+      $related_products[$related_product->get_id()] = $related_product;
+    }
+  }
+}
+
+/**
+ * Fallback: if WooCommerce related products are empty,
+ * get latest products but still exclude current product.
+ */
+if (empty($related_products)) {
+  $fallback_products = wc_get_products([
     'limit'   => 10,
     'status'  => 'publish',
     'exclude' => [$current_product_id],
     'orderby' => 'date',
     'order'   => 'DESC',
   ]);
-} else {
-  $related_products = [];
 
-  foreach ($related_ids as $related_id) {
-    $related_product = wc_get_product($related_id);
-
-    if ($related_product && $related_product->is_visible()) {
-      $related_products[] = $related_product;
+  foreach ($fallback_products as $fallback_product) {
+    if ($fallback_product && $fallback_product->is_visible()) {
+      $related_products[$fallback_product->get_id()] = $fallback_product;
     }
   }
 }
+
+$related_products = array_values($related_products);
 
 if (empty($related_products)) {
   return;
@@ -63,8 +89,8 @@ if (empty($related_products)) {
 
           <?php foreach ($related_products as $related_product) : ?>
             <?php
-            $product_id = $related_product->get_id();
-            $product_link = get_permalink($product_id);
+            $related_product_id = $related_product->get_id();
+            $product_link = get_permalink($related_product_id);
             ?>
 
             <div class="zc-you-may-like-slide">
@@ -116,6 +142,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const track = carousel.querySelector('.zc-you-may-like-track');
   const prevBtn = section ? section.querySelector('.zc-you-may-like-btn--prev') : null;
   const nextBtn = section ? section.querySelector('.zc-you-may-like-btn--next') : null;
+  const arrows = section ? section.querySelector('.zc-you-may-like-arrows') : null;
 
   if (!viewport || !track || !prevBtn || !nextBtn) return;
 
@@ -124,25 +151,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
   if (!originalCount) return;
 
-  originalSlides.forEach(function (slide) {
-    const clone = slide.cloneNode(true);
-    clone.classList.add('is-clone');
-    track.appendChild(clone);
-  });
-
-  originalSlides.slice().reverse().forEach(function (slide) {
-    const clone = slide.cloneNode(true);
-    clone.classList.add('is-clone');
-    track.insertBefore(clone, track.firstChild);
-  });
-
   let slides = Array.from(track.children);
-  let currentIndex = originalCount;
+  let currentIndex = 0;
   let slideWidth = 0;
   let gap = 16;
   let perView = 5;
   let autoplay = null;
   let isMoving = false;
+  let isInfinite = false;
 
   function getPerView() {
     const width = window.innerWidth;
@@ -154,12 +170,67 @@ document.addEventListener('DOMContentLoaded', function () {
     return 5;
   }
 
+  function clearClones() {
+    track.querySelectorAll('.is-clone').forEach(function (clone) {
+      clone.remove();
+    });
+
+    slides = Array.from(track.children);
+  }
+
+  function buildClones() {
+    clearClones();
+
+    originalSlides.forEach(function (slide) {
+      const clone = slide.cloneNode(true);
+      clone.classList.add('is-clone');
+      track.appendChild(clone);
+    });
+
+    originalSlides.slice().reverse().forEach(function (slide) {
+      const clone = slide.cloneNode(true);
+      clone.classList.add('is-clone');
+      track.insertBefore(clone, track.firstChild);
+    });
+
+    slides = Array.from(track.children);
+    currentIndex = originalCount;
+  }
+
   function setSizes() {
     perView = getPerView();
     gap = window.innerWidth <= 768 ? 14 : 16;
 
+    /**
+     * Important:
+     * Only run infinite carousel if there are more products than visible cards.
+     * If there is only 1 product, do not clone it.
+     */
+    isInfinite = originalCount > perView;
+
+    if (isInfinite) {
+      if (!track.querySelector('.is-clone')) {
+        buildClones();
+      }
+
+      if (arrows) {
+        arrows.style.display = 'flex';
+      }
+    } else {
+      clearClones();
+      currentIndex = 0;
+
+      if (arrows) {
+        arrows.style.display = 'none';
+      }
+    }
+
+    slides = Array.from(track.children);
+
     const viewportWidth = viewport.clientWidth;
-    slideWidth = (viewportWidth - gap * (perView - 1)) / perView;
+    const activePerView = Math.min(perView, originalCount);
+
+    slideWidth = (viewportWidth - gap * (activePerView - 1)) / activePerView;
 
     slides.forEach(function (slide) {
       slide.style.flex = '0 0 ' + slideWidth + 'px';
@@ -167,6 +238,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     track.style.gap = gap + 'px';
     moveToIndex(currentIndex, false);
+
+    if (isInfinite) {
+      startAutoplay();
+    } else {
+      stopAutoplay();
+    }
   }
 
   function moveToIndex(index, animate = true) {
@@ -177,7 +254,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function goNext() {
-    if (isMoving) return;
+    if (!isInfinite || isMoving) return;
 
     isMoving = true;
     currentIndex++;
@@ -185,7 +262,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function goPrev() {
-    if (isMoving) return;
+    if (!isInfinite || isMoving) return;
 
     isMoving = true;
     currentIndex--;
@@ -193,6 +270,8 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   track.addEventListener('transitionend', function () {
+    if (!isInfinite) return;
+
     isMoving = false;
 
     if (currentIndex >= originalCount * 2) {
@@ -208,6 +287,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
   function startAutoplay() {
     stopAutoplay();
+
+    if (!isInfinite) return;
 
     autoplay = setInterval(function () {
       goNext();
@@ -235,12 +316,10 @@ document.addEventListener('DOMContentLoaded', function () {
   carousel.addEventListener('mouseleave', startAutoplay);
 
   window.addEventListener('resize', function () {
-    slides = Array.from(track.children);
     setSizes();
   });
 
   setSizes();
-  startAutoplay();
 });
 </script>
 
@@ -444,7 +523,6 @@ document.addEventListener('DOMContentLoaded', function () {
   color: #ffffff;
 }
 
-/* 1024 */
 @media screen and (max-width: 1024px) {
   .zc-you-may-like-card {
     min-height: 240px;
@@ -455,7 +533,6 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 }
 
-/* 768 */
 @media screen and (max-width: 768px) {
   .zc-you-may-like-section {
     padding: 10px 0 60px;
@@ -475,7 +552,6 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 }
 
-/* 480 */
 @media screen and (max-width: 480px) {
   .zc-you-may-like-head {
     align-items: flex-start;
