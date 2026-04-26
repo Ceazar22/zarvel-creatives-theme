@@ -1,5 +1,11 @@
 <?php
+defined('ABSPATH') || exit;
+
 $zc_shop_url = home_url('/shop/');
+
+if (!taxonomy_exists('product_cat')) {
+  return;
+}
 
 $zc_categories = get_terms([
   'taxonomy'   => 'product_cat',
@@ -8,63 +14,85 @@ $zc_categories = get_terms([
   'order'      => 'ASC',
 ]);
 
-if (is_wp_error($zc_categories)) {
-  $zc_categories = [];
-}
-
-if (empty($zc_categories)) {
+if (is_wp_error($zc_categories) || empty($zc_categories)) {
   return;
 }
 
-$zc_fallback_image = get_template_directory_uri() . '/assets/images/hero-tshirt-white.png';
-
-/**
- * Get category image.
- * Priority:
- * 1. WooCommerce category thumbnail
- * 2. First product image inside category
- * 3. Theme fallback image
- */
-function zc_get_category_display_image($category, $fallback_image) {
-  if (!$category || empty($category->term_id)) {
-    return $fallback_image;
-  }
-
-  $thumbnail_id = get_term_meta($category->term_id, 'thumbnail_id', true);
-
-  if ($thumbnail_id) {
-    $category_image = wp_get_attachment_image_url($thumbnail_id, 'woocommerce_thumbnail');
-
-    if ($category_image) {
-      return $category_image;
+if (!function_exists('zc_shop_category_first_product_image')) {
+  function zc_shop_category_first_product_image($category) {
+    if (!$category || empty($category->term_id)) {
+      return '';
     }
-  }
 
-  if (!function_exists('wc_get_products')) {
-    return $fallback_image;
-  }
+    $product_ids = get_posts([
+      'post_type'      => 'product',
+      'post_status'    => 'publish',
+      'posts_per_page' => 10,
+      'fields'         => 'ids',
+      'orderby'        => [
+        'menu_order' => 'ASC',
+        'date'       => 'DESC',
+      ],
+      'tax_query'      => [
+        [
+          'taxonomy'         => 'product_cat',
+          'field'            => 'term_id',
+          'terms'            => [$category->term_id],
+          'include_children' => true,
+        ],
+      ],
+    ]);
 
-  $category_products = wc_get_products([
-    'limit'    => 1,
-    'status'   => 'publish',
-    'category' => [$category->slug],
-    'orderby'  => 'menu_order',
-    'order'    => 'ASC',
-  ]);
+    if (empty($product_ids)) {
+      return '';
+    }
 
-  if (!empty($category_products)) {
-    $first_product = $category_products[0];
+    foreach ($product_ids as $product_id) {
+      $product = wc_get_product($product_id);
 
-    if ($first_product && $first_product->get_image_id()) {
-      $product_image = wp_get_attachment_image_url($first_product->get_image_id(), 'woocommerce_thumbnail');
+      if (!$product) {
+        continue;
+      }
 
-      if ($product_image) {
-        return $product_image;
+      $image_id = $product->get_image_id();
+
+      if ($image_id) {
+        $image_url = wp_get_attachment_image_url($image_id, 'woocommerce_thumbnail');
+
+        if ($image_url) {
+          return $image_url;
+        }
       }
     }
-  }
 
-  return $fallback_image;
+    return '';
+  }
+}
+
+if (!function_exists('zc_shop_category_display_image')) {
+  function zc_shop_category_display_image($category) {
+    if (!$category || empty($category->term_id)) {
+      return wc_placeholder_img_src('woocommerce_thumbnail');
+    }
+
+    $thumbnail_id = get_term_meta($category->term_id, 'thumbnail_id', true);
+
+    if ($thumbnail_id) {
+      $category_image = wp_get_attachment_image_url($thumbnail_id, 'woocommerce_thumbnail');
+
+      if ($category_image) {
+        return $category_image;
+      }
+    }
+
+    $first_product_image = zc_shop_category_first_product_image($category);
+
+    if ($first_product_image) {
+      return $first_product_image;
+    }
+
+    return wc_placeholder_img_src('woocommerce_thumbnail');
+  }
 }
 ?>
 
@@ -95,16 +123,20 @@ function zc_get_category_display_image($category, $fallback_image) {
               $zc_category_link = $zc_shop_url;
             }
 
-            $zc_category_image = zc_get_category_display_image($zc_category, $zc_fallback_image);
+            $zc_category_image = zc_shop_category_display_image($zc_category);
             ?>
 
             <div class="zc-category-carousel__slide">
               <a href="<?php echo esc_url($zc_category_link); ?>" class="zc-category-card">
 
-                <div
-                  class="zc-category-card__image"
-                  style="background-image: url('<?php echo esc_url($zc_category_image); ?>');"
-                ></div>
+                <div class="zc-category-card__image-wrap">
+                  <img
+                    src="<?php echo esc_url($zc_category_image); ?>"
+                    alt="<?php echo esc_attr($zc_category->name); ?>"
+                    class="zc-category-card__image"
+                    loading="lazy"
+                  >
+                </div>
 
                 <div class="zc-category-card__bottom">
                   <span class="zc-category-card__name">
@@ -149,7 +181,11 @@ document.addEventListener('DOMContentLoaded', function () {
   const originalSlides = Array.from(track.children);
   const originalCount = originalSlides.length;
 
-  if (!originalCount) return;
+  if (!originalCount) {
+    prevBtn.style.display = 'none';
+    nextBtn.style.display = 'none';
+    return;
+  }
 
   let slides = Array.from(track.children);
   let currentIndex = 0;
@@ -400,13 +436,27 @@ document.addEventListener('DOMContentLoaded', function () {
   box-shadow: 0 16px 28px rgba(0, 0, 0, 0.08);
 }
 
-.zc-category-card__image {
+.zc-category-card__image-wrap {
   width: 100%;
   height: 165px;
   border-radius: 12px;
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: contain;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.zc-category-card__image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  transition: 0.25s ease;
+}
+
+.zc-category-card:hover .zc-category-card__image {
+  transform: scale(1.04);
 }
 
 .zc-category-card__bottom {
@@ -547,7 +597,7 @@ document.addEventListener('DOMContentLoaded', function () {
     padding: 12px;
   }
 
-  .zc-category-card__image {
+  .zc-category-card__image-wrap {
     height: 135px;
   }
 
@@ -579,7 +629,7 @@ document.addEventListener('DOMContentLoaded', function () {
     min-height: 210px;
   }
 
-  .zc-category-card__image {
+  .zc-category-card__image-wrap {
     height: 130px;
   }
 }
