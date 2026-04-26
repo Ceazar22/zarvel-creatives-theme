@@ -77,10 +77,6 @@ if (!function_exists('zc_category_get_image')) {
 
     <div class="zc-home-categories__head">
       <h2 class="zc-home-categories__title">SHOP BY CATEGORY</h2>
-
-      <a href="<?php echo esc_url($zc_fallback_url); ?>" class="zc-home-categories__view-all">
-        View all products
-      </a>
     </div>
 
     <div class="zc-category-carousel" data-zc-category-carousel>
