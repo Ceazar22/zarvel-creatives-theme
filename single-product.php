@@ -18,8 +18,8 @@ wp_enqueue_script('wc-add-to-cart-variation');
 
 /**
  * Main image only.
- * Do NOT show all gallery images because Printful/WooCommerce can add
- * every variant color/mockup into the gallery.
+ * Do NOT show every gallery image because Printful/WooCommerce often adds
+ * all color mockups into the product gallery.
  */
 $main_image_id = $product->get_image_id();
 
@@ -232,6 +232,23 @@ document.addEventListener('DOMContentLoaded', function () {
   const mainImage = document.querySelector('#zcMainProductImage');
   const thumbs = document.querySelectorAll('.zc-product-thumb[data-large]');
 
+  function updateSingleThumb(src, alt) {
+    const firstThumb = document.querySelector('.zc-product-thumb[data-large]');
+
+    if (!firstThumb || !src) return;
+
+    const thumbImg = firstThumb.querySelector('img');
+
+    firstThumb.setAttribute('data-large', src);
+    firstThumb.setAttribute('data-alt', alt || '');
+    firstThumb.classList.add('is-active');
+
+    if (thumbImg) {
+      thumbImg.src = src;
+      thumbImg.alt = alt || '';
+    }
+  }
+
   function updateMainImage(src, alt) {
     if (!mainImage || !src) return;
 
@@ -241,6 +258,8 @@ document.addEventListener('DOMContentLoaded', function () {
       mainImage.src = src;
       mainImage.alt = alt || '';
       mainImage.classList.remove('is-changing');
+
+      updateSingleThumb(src, alt);
     }, 120);
   }
 
@@ -263,6 +282,21 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
+  /**
+   * If WooCommerce changes the main image first,
+   * this keeps the left thumbnail synced with the current image.
+   */
+  if (mainImage) {
+    const imageObserver = new MutationObserver(function () {
+      updateSingleThumb(mainImage.src, mainImage.alt);
+    });
+
+    imageObserver.observe(mainImage, {
+      attributes: true,
+      attributeFilter: ['src']
+    });
+  }
+
   const variationSelects = document.querySelectorAll('.variations select');
 
   variationSelects.forEach(function (select) {
@@ -272,7 +306,10 @@ document.addEventListener('DOMContentLoaded', function () {
     wrapper.className = 'zc-variation-buttons';
 
     const labelText = select.closest('tr')?.querySelector('label')?.textContent || '';
-    const isColor = labelText.toLowerCase().includes('color') || select.name.toLowerCase().includes('color');
+    const isColor =
+      labelText.toLowerCase().includes('color') ||
+      select.name.toLowerCase().includes('color') ||
+      select.id.toLowerCase().includes('color');
 
     Array.from(select.options).forEach(function (option) {
       if (!option.value) return;
@@ -285,9 +322,10 @@ document.addEventListener('DOMContentLoaded', function () {
       if (isColor) {
         const dot = document.createElement('span');
         dot.className = 'zc-color-swatch';
-        dot.style.background = getColorValue(option.textContent);
+        dot.style.background = getColorValue(option.textContent || option.value);
         button.appendChild(dot);
-        button.setAttribute('aria-label', option.textContent);
+        button.setAttribute('aria-label', option.textContent || option.value);
+        button.setAttribute('title', option.textContent || option.value);
       } else {
         button.textContent = option.textContent;
       }
@@ -327,11 +365,11 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
   /**
-   * WooCommerce normally changes the image after a complete variation is selected.
-   * This changes the image earlier when color is selected, if variation data exists.
+   * Finds a variation image when only the color has been selected.
+   * Useful because WooCommerce usually waits until all attributes are selected.
    */
   function updateImageFromSelectedColor(attributeName, attributeValue) {
-    if (!window.jQuery || !mainImage) return;
+    if (!window.jQuery || !mainImage || !attributeValue) return;
 
     jQuery(function ($) {
       const form = $('.variations_form');
@@ -345,7 +383,16 @@ document.addEventListener('DOMContentLoaded', function () {
       const matchedVariation = variations.find(function (variation) {
         if (!variation || !variation.attributes) return false;
 
-        return variation.attributes[attributeName] === attributeValue;
+        if (variation.attributes[attributeName] === attributeValue) {
+          return true;
+        }
+
+        return Object.keys(variation.attributes).some(function (key) {
+          const keyIsColor = key.toLowerCase().includes('color');
+          const valueMatches = normalizeColorName(variation.attributes[key]) === normalizeColorName(attributeValue);
+
+          return keyIsColor && valueMatches;
+        });
       });
 
       if (
@@ -362,13 +409,12 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   /**
-   * When WooCommerce finds the final selected variation,
-   * use the official variation image.
+   * Official WooCommerce variation image change.
    */
   if (window.jQuery) {
     jQuery(function ($) {
-      const defaultImage = '<?php echo esc_url($main_image_url); ?>';
-      const defaultAlt = '<?php echo esc_js($main_image_alt ?: $product->get_name()); ?>';
+      const defaultImage = <?php echo wp_json_encode($main_image_url); ?>;
+      const defaultAlt = <?php echo wp_json_encode($main_image_alt ?: $product->get_name()); ?>;
 
       $('.variations_form').on('found_variation', function (event, variation) {
         if (!variation || !variation.image || !variation.image.full_src) return;
@@ -382,11 +428,37 @@ document.addEventListener('DOMContentLoaded', function () {
       $('.variations_form').on('reset_data', function () {
         updateMainImage(defaultImage, defaultAlt);
       });
+
+      /**
+       * Initial sync.
+       * If WooCommerce already selected a default variation like Pink,
+       * this forces the thumbnail and main image to match that variation.
+       */
+      setTimeout(function () {
+        const colorSelect = document.querySelector(
+          '.variations select[name*="color"], .variations select[id*="color"]'
+        );
+
+        if (colorSelect && colorSelect.value) {
+          updateImageFromSelectedColor(colorSelect.name, colorSelect.value);
+        }
+
+        $('.variations_form').trigger('check_variations');
+        updateSingleThumb(mainImage ? mainImage.src : defaultImage, mainImage ? mainImage.alt : defaultAlt);
+      }, 300);
     });
   }
 
+  function normalizeColorName(colorName) {
+    return String(colorName || '')
+      .toLowerCase()
+      .trim()
+      .replace(/[-_]+/g, ' ')
+      .replace(/\s+/g, ' ');
+  }
+
   function getColorValue(colorName) {
-    const key = colorName.toLowerCase().trim();
+    const key = normalizeColorName(colorName);
 
     const map = {
       black: '#111111',
@@ -396,17 +468,35 @@ document.addEventListener('DOMContentLoaded', function () {
       navy: '#111d35',
       gray: '#b8b8b8',
       grey: '#b8b8b8',
+      'sport grey': '#b8b8b8',
+      'sport gray': '#b8b8b8',
+      'ash': '#d8d8d8',
       beige: '#d6c0a2',
       brown: '#8b5a35',
       orange: '#ff5b1a',
       mustard: '#d69b22',
+      yellow: '#f2c94c',
       pink: '#f3a9c4',
+      'light pink': '#f6c6d8',
+      'dusty pink': '#d99aaa',
       green: '#5f8f60',
-      purple: '#7d5ba6',
-      yellow: '#f2c94c'
+      purple: '#7d5ba6'
     };
 
-    return map[key] || '#d9d9d9';
+    if (map[key]) return map[key];
+
+    if (key.includes('pink')) return '#f3a9c4';
+    if (key.includes('black')) return '#111111';
+    if (key.includes('white')) return '#ffffff';
+    if (key.includes('grey') || key.includes('gray')) return '#b8b8b8';
+    if (key.includes('red')) return '#c92828';
+    if (key.includes('blue')) return '#4f7fa8';
+    if (key.includes('green')) return '#5f8f60';
+    if (key.includes('yellow')) return '#f2c94c';
+    if (key.includes('orange')) return '#ff5b1a';
+    if (key.includes('mustard')) return '#d69b22';
+
+    return '#d9d9d9';
   }
 });
 </script>
