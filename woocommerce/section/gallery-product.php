@@ -1311,6 +1311,3 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 }
 </style>
-
-<?php
-get_footer();
