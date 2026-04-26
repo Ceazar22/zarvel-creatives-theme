@@ -16,14 +16,93 @@ if (!$product) {
 
 wp_enqueue_script('wc-add-to-cart-variation');
 
-/**
- * Main image only.
- * Do NOT show every gallery image because Printful/WooCommerce often adds
- * all color mockups into the product gallery.
- */
-$main_image_id = $product->get_image_id();
+if (!function_exists('zc_sp_normalize_key')) {
+  function zc_sp_normalize_key($value) {
+    $value = strtolower(remove_accents((string) $value));
+    $value = str_replace(['-', '_'], ' ', $value);
+    $value = preg_replace('/[^a-z0-9]+/', ' ', $value);
+    $value = preg_replace('/\s+/', ' ', $value);
+    return trim($value);
+  }
+}
 
-$image_ids = array_filter([$main_image_id]);
+if (!function_exists('zc_sp_is_color_attr')) {
+  function zc_sp_is_color_attr($attribute_name) {
+    $label = wc_attribute_label($attribute_name);
+    $haystack = zc_sp_normalize_key($attribute_name . ' ' . $label);
+
+    return strpos($haystack, 'color') !== false || strpos($haystack, 'colour') !== false;
+  }
+}
+
+if (!function_exists('zc_sp_get_attribute_option_label')) {
+  function zc_sp_get_attribute_option_label($attribute_name, $option) {
+    if (taxonomy_exists($attribute_name)) {
+      $term = get_term_by('slug', $option, $attribute_name);
+
+      if ($term && !is_wp_error($term)) {
+        return $term->name;
+      }
+    }
+
+    return $option;
+  }
+}
+
+if (!function_exists('zc_sp_get_image_object')) {
+  function zc_sp_get_image_object($image_id, $fallback_alt = '') {
+    if (!$image_id) {
+      return null;
+    }
+
+    $large = wp_get_attachment_image_url($image_id, 'large');
+    $thumb = wp_get_attachment_image_url($image_id, 'woocommerce_thumbnail');
+    $full  = wp_get_attachment_image_url($image_id, 'full');
+
+    if (!$large) {
+      return null;
+    }
+
+    $alt      = get_post_meta($image_id, '_wp_attachment_image_alt', true);
+    $title    = get_the_title($image_id);
+    $file_url = wp_get_attachment_url($image_id);
+    $filename = $file_url ? wp_basename(parse_url($file_url, PHP_URL_PATH)) : '';
+
+    $haystack = zc_sp_normalize_key($alt . ' ' . $title . ' ' . $filename);
+
+    return [
+      'id'       => (int) $image_id,
+      'large'    => $large,
+      'thumb'    => $thumb ?: $large,
+      'full'     => $full ?: $large,
+      'alt'      => $alt ?: $fallback_alt,
+      'title'    => $title,
+      'filename' => $filename,
+      'haystack' => $haystack,
+    ];
+  }
+}
+
+if (!function_exists('zc_sp_add_unique_image')) {
+  function zc_sp_add_unique_image(&$images, $image_obj) {
+    if (!$image_obj || empty($image_obj['id'])) {
+      return;
+    }
+
+    foreach ($images as $existing) {
+      if (!empty($existing['id']) && (int) $existing['id'] === (int) $image_obj['id']) {
+        return;
+      }
+    }
+
+    $images[] = $image_obj;
+  }
+}
+
+$main_image_id = $product->get_image_id();
+$gallery_ids   = $product->get_gallery_image_ids();
+
+$all_image_ids = array_filter(array_unique(array_merge([$main_image_id], $gallery_ids)));
 
 $main_image_url = $main_image_id
   ? wp_get_attachment_image_url($main_image_id, 'large')
@@ -32,6 +111,198 @@ $main_image_url = $main_image_id
 $main_image_alt = $main_image_id
   ? get_post_meta($main_image_id, '_wp_attachment_image_alt', true)
   : $product->get_name();
+
+$all_image_objects = [];
+
+foreach ($all_image_ids as $image_id) {
+  $image_obj = zc_sp_get_image_object($image_id, $product->get_name());
+
+  if ($image_obj) {
+    $all_image_objects[] = $image_obj;
+  }
+}
+
+$variation_attributes = $product->is_type('variable') ? $product->get_variation_attributes() : [];
+$color_attribute_name = '';
+$color_options_raw    = [];
+
+foreach ($variation_attributes as $attribute_name => $options) {
+  if (zc_sp_is_color_attr($attribute_name)) {
+    $color_attribute_name = $attribute_name;
+    $color_options_raw    = $options;
+    break;
+  }
+}
+
+$color_options = [];
+
+if ($color_attribute_name && !empty($color_options_raw)) {
+  foreach ($color_options_raw as $option) {
+    $label = zc_sp_get_attribute_option_label($color_attribute_name, $option);
+
+    $value_key = zc_sp_normalize_key($option);
+    $label_key = zc_sp_normalize_key($label);
+
+    $keys = array_filter(array_unique([$value_key, $label_key]));
+
+    $color_options[] = [
+      'value' => $option,
+      'label' => $label,
+      'keys'  => $keys,
+      'primary_key' => $value_key ?: $label_key,
+    ];
+  }
+}
+
+$zc_color_gallery_map = [];
+
+foreach ($color_options as $color_option) {
+  $primary_key = $color_option['primary_key'];
+
+  if (!$primary_key) {
+    continue;
+  }
+
+  $zc_color_gallery_map[$primary_key] = [];
+
+  foreach ($all_image_objects as $image_obj) {
+    foreach ($color_option['keys'] as $key) {
+      $compact_haystack = str_replace(' ', '', $image_obj['haystack']);
+      $compact_key      = str_replace(' ', '', $key);
+
+      if (
+        $key &&
+        (
+          strpos($image_obj['haystack'], $key) !== false ||
+          strpos($compact_haystack, $compact_key) !== false
+        )
+      ) {
+        zc_sp_add_unique_image($zc_color_gallery_map[$primary_key], $image_obj);
+        break;
+      }
+    }
+  }
+}
+
+/**
+ * Add variation image as fallback.
+ * WooCommerce usually gives only 1 image per variation.
+ * Gallery images with matching filenames/alt/title provide the second image.
+ */
+if ($product->is_type('variable') && $color_attribute_name) {
+  $variation_ids = $product->get_children();
+
+  foreach ($variation_ids as $variation_id) {
+    $variation = wc_get_product($variation_id);
+
+    if (!$variation) {
+      continue;
+    }
+
+    $variation_attrs = $variation->get_variation_attributes();
+    $variation_color = '';
+
+    foreach ($variation_attrs as $attr_key => $attr_value) {
+      $clean_attr_key = str_replace('attribute_', '', $attr_key);
+
+      if ($clean_attr_key === $color_attribute_name || zc_sp_is_color_attr($clean_attr_key)) {
+        $variation_color = $attr_value;
+        break;
+      }
+    }
+
+    if (!$variation_color) {
+      continue;
+    }
+
+    $variation_color_key = zc_sp_normalize_key($variation_color);
+    $variation_image_id  = $variation->get_image_id();
+
+    if (!$variation_image_id) {
+      continue;
+    }
+
+    $variation_image_obj = zc_sp_get_image_object($variation_image_id, $product->get_name());
+
+    foreach ($color_options as $color_option) {
+      $primary_key = $color_option['primary_key'];
+
+      if (!$primary_key) {
+        continue;
+      }
+
+      if (in_array($variation_color_key, $color_option['keys'], true)) {
+        zc_sp_add_unique_image($zc_color_gallery_map[$primary_key], $variation_image_obj);
+      }
+    }
+  }
+}
+
+/**
+ * Limit to 2 mockups per color.
+ */
+foreach ($zc_color_gallery_map as $key => $images) {
+  $zc_color_gallery_map[$key] = array_slice($images, 0, 2);
+}
+
+/**
+ * Add aliases so JS can find color by value or label.
+ */
+foreach ($color_options as $color_option) {
+  $primary_key = $color_option['primary_key'];
+
+  if (!$primary_key || !isset($zc_color_gallery_map[$primary_key])) {
+    continue;
+  }
+
+  foreach ($color_option['keys'] as $alias_key) {
+    if ($alias_key) {
+      $zc_color_gallery_map[$alias_key] = $zc_color_gallery_map[$primary_key];
+    }
+  }
+}
+
+$default_attributes = $product->get_default_attributes();
+$initial_color_key  = '';
+
+if ($color_attribute_name && !empty($default_attributes[$color_attribute_name])) {
+  $initial_color_key = zc_sp_normalize_key($default_attributes[$color_attribute_name]);
+}
+
+if (!$initial_color_key && !empty($color_options[0]['primary_key'])) {
+  $initial_color_key = $color_options[0]['primary_key'];
+}
+
+$initial_gallery_images = [];
+
+if ($initial_color_key && !empty($zc_color_gallery_map[$initial_color_key])) {
+  $initial_gallery_images = $zc_color_gallery_map[$initial_color_key];
+}
+
+if (empty($initial_gallery_images)) {
+  foreach ($zc_color_gallery_map as $gallery_images) {
+    if (!empty($gallery_images)) {
+      $initial_gallery_images = $gallery_images;
+      break;
+    }
+  }
+}
+
+if (empty($initial_gallery_images)) {
+  $fallback_image_obj = zc_sp_get_image_object($main_image_id, $product->get_name());
+
+  if ($fallback_image_obj) {
+    $initial_gallery_images = [$fallback_image_obj];
+  }
+}
+
+$initial_main_image = !empty($initial_gallery_images[0]['large'])
+  ? $initial_gallery_images[0]['large']
+  : $main_image_url;
+
+$initial_main_alt = !empty($initial_gallery_images[0]['alt'])
+  ? $initial_gallery_images[0]['alt']
+  : ($main_image_alt ?: $product->get_name());
 
 $average_rating = $product->get_average_rating();
 $review_count   = $product->get_review_count();
@@ -61,43 +332,22 @@ $button_text_filter = function () {
 
       <div class="zc-product-layout">
 
-        <!-- LEFT GALLERY -->
         <div class="zc-product-gallery">
 
-          <div class="zc-product-thumbs">
-            <?php if (!empty($image_ids)) : ?>
-              <?php foreach ($image_ids as $index => $image_id) : ?>
-                <?php
-                $thumb_url = wp_get_attachment_image_url($image_id, 'woocommerce_thumbnail');
-                $large_url = wp_get_attachment_image_url($image_id, 'large');
-                $alt_text  = get_post_meta($image_id, '_wp_attachment_image_alt', true);
-                ?>
-
-                <button
-                  class="zc-product-thumb <?php echo $index === 0 ? 'is-active' : ''; ?>"
-                  type="button"
-                  data-large="<?php echo esc_url($large_url); ?>"
-                  data-alt="<?php echo esc_attr($alt_text ?: $product->get_name()); ?>"
-                >
-                  <img
-                    src="<?php echo esc_url($thumb_url); ?>"
-                    alt="<?php echo esc_attr($alt_text ?: $product->get_name()); ?>"
-                  >
-                </button>
-              <?php endforeach; ?>
-            <?php else : ?>
+          <div class="zc-product-thumbs" id="zcProductThumbs">
+            <?php foreach ($initial_gallery_images as $index => $image) : ?>
               <button
-                class="zc-product-thumb is-active"
+                class="zc-product-thumb <?php echo $index === 0 ? 'is-active' : ''; ?>"
                 type="button"
-                data-large="<?php echo esc_url(wc_placeholder_img_src('woocommerce_single')); ?>"
-                data-alt="<?php echo esc_attr($product->get_name()); ?>"
+                data-large="<?php echo esc_url($image['large']); ?>"
+                data-alt="<?php echo esc_attr($image['alt']); ?>"
               >
                 <img
-                  src="<?php echo esc_url(wc_placeholder_img_src()); ?>"
-                  alt="<?php echo esc_attr($product->get_name()); ?>"
+                  src="<?php echo esc_url($image['thumb']); ?>"
+                  alt="<?php echo esc_attr($image['alt']); ?>"
                 >
               </button>
-            <?php endif; ?>
+            <?php endforeach; ?>
           </div>
 
           <div class="zc-product-main-image-wrap">
@@ -110,8 +360,8 @@ $button_text_filter = function () {
             <img
               id="zcMainProductImage"
               class="zc-product-main-image"
-              src="<?php echo esc_url($main_image_url); ?>"
-              alt="<?php echo esc_attr($main_image_alt ?: $product->get_name()); ?>"
+              src="<?php echo esc_url($initial_main_image); ?>"
+              alt="<?php echo esc_attr($initial_main_alt); ?>"
             >
 
             <button class="zc-product-zoom" type="button" aria-label="Zoom image">
@@ -126,7 +376,6 @@ $button_text_filter = function () {
 
         </div>
 
-        <!-- RIGHT SUMMARY -->
         <div class="zc-product-summary">
 
           <h1 class="zc-product-title">
@@ -230,23 +479,19 @@ $button_text_filter = function () {
 <script>
 document.addEventListener('DOMContentLoaded', function () {
   const mainImage = document.querySelector('#zcMainProductImage');
-  const thumbs = document.querySelectorAll('.zc-product-thumb[data-large]');
+  const thumbsWrap = document.querySelector('#zcProductThumbs');
 
-  function updateSingleThumb(src, alt) {
-    const firstThumb = document.querySelector('.zc-product-thumb[data-large]');
+  const variationGalleryMap = <?php echo wp_json_encode($zc_color_gallery_map); ?>;
+  const defaultGallery = <?php echo wp_json_encode($initial_gallery_images); ?>;
 
-    if (!firstThumb || !src) return;
-
-    const thumbImg = firstThumb.querySelector('img');
-
-    firstThumb.setAttribute('data-large', src);
-    firstThumb.setAttribute('data-alt', alt || '');
-    firstThumb.classList.add('is-active');
-
-    if (thumbImg) {
-      thumbImg.src = src;
-      thumbImg.alt = alt || '';
-    }
+  function normalizeColorName(colorName) {
+    return String(colorName || '')
+      .toLowerCase()
+      .trim()
+      .replace(/[-_]+/g, ' ')
+      .replace(/[^a-z0-9]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
   }
 
   function updateMainImage(src, alt) {
@@ -258,18 +503,16 @@ document.addEventListener('DOMContentLoaded', function () {
       mainImage.src = src;
       mainImage.alt = alt || '';
       mainImage.classList.remove('is-changing');
-
-      updateSingleThumb(src, alt);
     }, 120);
   }
 
-  if (mainImage && thumbs.length) {
+  function bindThumbClicks() {
+    const thumbs = document.querySelectorAll('.zc-product-thumb[data-large]');
+
     thumbs.forEach(function (thumb) {
       thumb.addEventListener('click', function () {
         const large = thumb.getAttribute('data-large');
         const alt = thumb.getAttribute('data-alt') || '';
-
-        if (!large) return;
 
         updateMainImage(large, alt);
 
@@ -282,20 +525,75 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  /**
-   * If WooCommerce changes the main image first,
-   * this keeps the left thumbnail synced with the current image.
-   */
-  if (mainImage) {
-    const imageObserver = new MutationObserver(function () {
-      updateSingleThumb(mainImage.src, mainImage.alt);
+  function renderGallery(images) {
+    if (!thumbsWrap || !Array.isArray(images) || !images.length) return false;
+
+    thumbsWrap.innerHTML = '';
+
+    images.forEach(function (image, index) {
+      const button = document.createElement('button');
+      button.className = 'zc-product-thumb' + (index === 0 ? ' is-active' : '');
+      button.type = 'button';
+      button.setAttribute('data-large', image.large || image.full || '');
+      button.setAttribute('data-alt', image.alt || '');
+
+      const img = document.createElement('img');
+      img.src = image.thumb || image.large || image.full || '';
+      img.alt = image.alt || '';
+
+      button.appendChild(img);
+      thumbsWrap.appendChild(button);
     });
 
-    imageObserver.observe(mainImage, {
-      attributes: true,
-      attributeFilter: ['src']
-    });
+    bindThumbClicks();
+
+    const firstImage = images[0];
+
+    if (firstImage) {
+      updateMainImage(firstImage.large || firstImage.full, firstImage.alt || '');
+    }
+
+    return true;
   }
+
+  function getSelectedOptionText(select) {
+    if (!select) return '';
+
+    const selectedOption = select.options[select.selectedIndex];
+
+    return selectedOption ? selectedOption.textContent : '';
+  }
+
+  function findColorSelect() {
+    const selects = document.querySelectorAll('.variations select');
+
+    for (const select of selects) {
+      const row = select.closest('tr');
+      const labelText = row ? (row.querySelector('label')?.textContent || '') : '';
+      const haystack = normalizeColorName(select.name + ' ' + select.id + ' ' + labelText);
+
+      if (haystack.includes('color') || haystack.includes('colour')) {
+        return select;
+      }
+    }
+
+    return null;
+  }
+
+  function setGalleryByColor(value, label) {
+    const key1 = normalizeColorName(value);
+    const key2 = normalizeColorName(label);
+
+    const images = variationGalleryMap[key1] || variationGalleryMap[key2];
+
+    if (images && images.length) {
+      return renderGallery(images);
+    }
+
+    return false;
+  }
+
+  bindThumbClicks();
 
   const variationSelects = document.querySelectorAll('.variations select');
 
@@ -306,10 +604,12 @@ document.addEventListener('DOMContentLoaded', function () {
     wrapper.className = 'zc-variation-buttons';
 
     const labelText = select.closest('tr')?.querySelector('label')?.textContent || '';
+
     const isColor =
-      labelText.toLowerCase().includes('color') ||
-      select.name.toLowerCase().includes('color') ||
-      select.id.toLowerCase().includes('color');
+      normalizeColorName(labelText).includes('color') ||
+      normalizeColorName(labelText).includes('colour') ||
+      normalizeColorName(select.name).includes('color') ||
+      normalizeColorName(select.id).includes('color');
 
     Array.from(select.options).forEach(function (option) {
       if (!option.value) return;
@@ -341,7 +641,7 @@ document.addEventListener('DOMContentLoaded', function () {
         button.classList.add('is-active');
 
         if (isColor) {
-          updateImageFromSelectedColor(select.name, option.value);
+          setGalleryByColor(option.value, option.textContent);
         }
       });
 
@@ -364,97 +664,45 @@ document.addEventListener('DOMContentLoaded', function () {
     syncActiveButton();
   });
 
-  /**
-   * Finds a variation image when only the color has been selected.
-   * Useful because WooCommerce usually waits until all attributes are selected.
-   */
-  function updateImageFromSelectedColor(attributeName, attributeValue) {
-    if (!window.jQuery || !mainImage || !attributeValue) return;
-
-    jQuery(function ($) {
-      const form = $('.variations_form');
-
-      if (!form.length) return;
-
-      const variations = form.data('product_variations');
-
-      if (!Array.isArray(variations)) return;
-
-      const matchedVariation = variations.find(function (variation) {
-        if (!variation || !variation.attributes) return false;
-
-        if (variation.attributes[attributeName] === attributeValue) {
-          return true;
-        }
-
-        return Object.keys(variation.attributes).some(function (key) {
-          const keyIsColor = key.toLowerCase().includes('color');
-          const valueMatches = normalizeColorName(variation.attributes[key]) === normalizeColorName(attributeValue);
-
-          return keyIsColor && valueMatches;
-        });
-      });
-
-      if (
-        matchedVariation &&
-        matchedVariation.image &&
-        matchedVariation.image.full_src
-      ) {
-        updateMainImage(
-          matchedVariation.image.full_src,
-          matchedVariation.image.alt || ''
-        );
-      }
-    });
-  }
-
-  /**
-   * Official WooCommerce variation image change.
-   */
   if (window.jQuery) {
     jQuery(function ($) {
-      const defaultImage = <?php echo wp_json_encode($main_image_url); ?>;
-      const defaultAlt = <?php echo wp_json_encode($main_image_alt ?: $product->get_name()); ?>;
-
       $('.variations_form').on('found_variation', function (event, variation) {
-        if (!variation || !variation.image || !variation.image.full_src) return;
+        const colorSelect = findColorSelect();
 
-        updateMainImage(
-          variation.image.full_src,
-          variation.image.alt || ''
-        );
+        if (colorSelect && colorSelect.value) {
+          const rendered = setGalleryByColor(colorSelect.value, getSelectedOptionText(colorSelect));
+
+          if (rendered) return;
+        }
+
+        if (variation && variation.image && variation.image.full_src) {
+          renderGallery([
+            {
+              large: variation.image.full_src,
+              thumb: variation.image.thumb_src || variation.image.src || variation.image.full_src,
+              full: variation.image.full_src,
+              alt: variation.image.alt || ''
+            }
+          ]);
+        }
       });
 
       $('.variations_form').on('reset_data', function () {
-        updateMainImage(defaultImage, defaultAlt);
+        renderGallery(defaultGallery);
       });
 
-      /**
-       * Initial sync.
-       * If WooCommerce already selected a default variation like Pink,
-       * this forces the thumbnail and main image to match that variation.
-       */
       setTimeout(function () {
-        const colorSelect = document.querySelector(
-          '.variations select[name*="color"], .variations select[id*="color"]'
-        );
+        const colorSelect = findColorSelect();
 
         if (colorSelect && colorSelect.value) {
-          updateImageFromSelectedColor(colorSelect.name, colorSelect.value);
+          setGalleryByColor(colorSelect.value, getSelectedOptionText(colorSelect));
+        } else {
+          renderGallery(defaultGallery);
         }
 
         $('.variations_form').trigger('check_variations');
-        updateSingleThumb(mainImage ? mainImage.src : defaultImage, mainImage ? mainImage.alt : defaultAlt);
       }, 300);
     });
-  }
-
-  function normalizeColorName(colorName) {
-    return String(colorName || '')
-      .toLowerCase()
-      .trim()
-      .replace(/[-_]+/g, ' ')
-      .replace(/\s+/g, ' ');
   }
 
   function getColorValue(colorName) {
@@ -470,7 +718,7 @@ document.addEventListener('DOMContentLoaded', function () {
       grey: '#b8b8b8',
       'sport grey': '#b8b8b8',
       'sport gray': '#b8b8b8',
-      'ash': '#d8d8d8',
+      ash: '#d8d8d8',
       beige: '#d6c0a2',
       brown: '#8b5a35',
       orange: '#ff5b1a',
@@ -547,7 +795,6 @@ document.addEventListener('DOMContentLoaded', function () {
   align-items: start;
 }
 
-/* Gallery */
 .zc-product-gallery {
   display: grid;
   grid-template-columns: 88px 1fr;
@@ -653,7 +900,6 @@ document.addEventListener('DOMContentLoaded', function () {
   stroke-linejoin: round;
 }
 
-/* Summary */
 .zc-product-summary {
   padding-top: 6px;
 }
@@ -767,7 +1013,6 @@ document.addEventListener('DOMContentLoaded', function () {
   font-weight: 850;
 }
 
-/* Woo Form */
 .zc-product-form-area {
   margin-top: 18px;
 }
@@ -977,7 +1222,6 @@ document.addEventListener('DOMContentLoaded', function () {
   font-weight: 950;
 }
 
-/* 1024 */
 @media screen and (max-width: 1024px) {
   .zc-product-layout {
     grid-template-columns: 1fr;
@@ -993,7 +1237,6 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 }
 
-/* 768 */
 @media screen and (max-width: 768px) {
   .zc-product-section {
     padding: 18px 0 60px;
@@ -1043,7 +1286,6 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 }
 
-/* 480 */
 @media screen and (max-width: 480px) {
   .zc-product-main-image-wrap {
     min-height: 360px;
