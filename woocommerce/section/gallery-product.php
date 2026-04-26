@@ -1,8 +1,6 @@
 <?php
 defined('ABSPATH') || exit;
 
-get_header();
-
 global $product;
 
 if (!is_a($product, 'WC_Product')) {
@@ -10,7 +8,6 @@ if (!is_a($product, 'WC_Product')) {
 }
 
 if (!$product) {
-  get_footer();
   return;
 }
 
@@ -146,9 +143,9 @@ if ($color_attribute_name && !empty($color_options_raw)) {
     $keys = array_filter(array_unique([$value_key, $label_key]));
 
     $color_options[] = [
-      'value' => $option,
-      'label' => $label,
-      'keys'  => $keys,
+      'value'       => $option,
+      'label'       => $label,
+      'keys'        => $keys,
       'primary_key' => $value_key ?: $label_key,
     ];
   }
@@ -184,11 +181,6 @@ foreach ($color_options as $color_option) {
   }
 }
 
-/**
- * Add variation image as fallback.
- * WooCommerce usually gives only 1 image per variation.
- * Gallery images with matching filenames/alt/title provide the second image.
- */
 if ($product->is_type('variable') && $color_attribute_name) {
   $variation_ids = $product->get_children();
 
@@ -238,16 +230,10 @@ if ($product->is_type('variable') && $color_attribute_name) {
   }
 }
 
-/**
- * Limit to 2 mockups per color.
- */
 foreach ($zc_color_gallery_map as $key => $images) {
   $zc_color_gallery_map[$key] = array_slice($images, 0, 2);
 }
 
-/**
- * Add aliases so JS can find color by value or label.
- */
 foreach ($color_options as $color_option) {
   $primary_key = $color_option['primary_key'];
 
@@ -312,169 +298,165 @@ $button_text_filter = function () {
 };
 ?>
 
-<main class="zc-single-product-page">
+<section class="zc-product-section">
+  <div class="zc-product-container">
 
-  <section class="zc-product-section">
-    <div class="zc-product-container">
+    <div class="zc-product-breadcrumb">
+      <?php
+      woocommerce_breadcrumb([
+        'delimiter'   => '<span>/</span>',
+        'wrap_before' => '<nav class="woocommerce-breadcrumb">',
+        'wrap_after'  => '</nav>',
+        'before'      => '',
+        'after'       => '',
+        'home'        => 'Home',
+      ]);
+      ?>
+    </div>
 
-      <div class="zc-product-breadcrumb">
-        <?php
-        woocommerce_breadcrumb([
-          'delimiter'   => '<span>/</span>',
-          'wrap_before' => '<nav class="woocommerce-breadcrumb">',
-          'wrap_after'  => '</nav>',
-          'before'      => '',
-          'after'       => '',
-          'home'        => 'Home',
-        ]);
-        ?>
-      </div>
+    <div class="zc-product-layout">
 
-      <div class="zc-product-layout">
+      <div class="zc-product-gallery">
 
-        <div class="zc-product-gallery">
-
-          <div class="zc-product-thumbs" id="zcProductThumbs">
-            <?php foreach ($initial_gallery_images as $index => $image) : ?>
-              <button
-                class="zc-product-thumb <?php echo $index === 0 ? 'is-active' : ''; ?>"
-                type="button"
-                data-large="<?php echo esc_url($image['large']); ?>"
-                data-alt="<?php echo esc_attr($image['alt']); ?>"
-              >
-                <img
-                  src="<?php echo esc_url($image['thumb']); ?>"
-                  alt="<?php echo esc_attr($image['alt']); ?>"
-                >
-              </button>
-            <?php endforeach; ?>
-          </div>
-
-          <div class="zc-product-main-image-wrap">
-            <button class="zc-product-wishlist" type="button" aria-label="Add to wishlist">
-              <svg viewBox="0 0 24 24">
-                <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/>
-              </svg>
-            </button>
-
-            <img
-              id="zcMainProductImage"
-              class="zc-product-main-image"
-              src="<?php echo esc_url($initial_main_image); ?>"
-              alt="<?php echo esc_attr($initial_main_alt); ?>"
+        <div class="zc-product-thumbs" id="zcProductThumbs">
+          <?php foreach ($initial_gallery_images as $index => $image) : ?>
+            <button
+              class="zc-product-thumb <?php echo $index === 0 ? 'is-active' : ''; ?>"
+              type="button"
+              data-large="<?php echo esc_url($image['large']); ?>"
+              data-alt="<?php echo esc_attr($image['alt']); ?>"
             >
-
-            <button class="zc-product-zoom" type="button" aria-label="Zoom image">
-              <svg viewBox="0 0 24 24">
-                <path d="M21 21l-4.35-4.35"></path>
-                <circle cx="11" cy="11" r="7"></circle>
-                <path d="M11 8v6"></path>
-                <path d="M8 11h6"></path>
-              </svg>
+              <img
+                src="<?php echo esc_url($image['thumb']); ?>"
+                alt="<?php echo esc_attr($image['alt']); ?>"
+              >
             </button>
-          </div>
-
+          <?php endforeach; ?>
         </div>
 
-        <div class="zc-product-summary">
+        <div class="zc-product-main-image-wrap">
+          <button class="zc-product-wishlist" type="button" aria-label="Add to wishlist">
+            <svg viewBox="0 0 24 24">
+              <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/>
+            </svg>
+          </button>
 
-          <h1 class="zc-product-title">
-            <?php echo esc_html($product->get_name()); ?>
-          </h1>
+          <img
+            id="zcMainProductImage"
+            class="zc-product-main-image"
+            src="<?php echo esc_url($initial_main_image); ?>"
+            alt="<?php echo esc_attr($initial_main_alt); ?>"
+          >
 
-          <div class="zc-product-rating-row">
-            <div class="zc-product-stars">
-              <?php
-              if ($average_rating > 0) {
-                echo wp_kses_post(wc_get_rating_html($average_rating, $review_count));
-              } else {
-                echo '<span class="zc-empty-stars">★★★★★</span>';
-              }
-              ?>
-            </div>
+          <button class="zc-product-zoom" type="button" aria-label="Zoom image">
+            <svg viewBox="0 0 24 24">
+              <path d="M21 21l-4.35-4.35"></path>
+              <circle cx="11" cy="11" r="7"></circle>
+              <path d="M11 8v6"></path>
+              <path d="M8 11h6"></path>
+            </svg>
+          </button>
+        </div>
 
-            <a href="#reviews" class="zc-product-review-link">
-              (<?php echo esc_html($review_count); ?> review<?php echo $review_count == 1 ? '' : 's'; ?>)
-            </a>
-          </div>
+      </div>
 
-          <div class="zc-product-price">
-            <?php echo wp_kses_post($product->get_price_html()); ?>
-          </div>
+      <div class="zc-product-summary">
 
-          <div class="zc-product-short-desc">
+        <h1 class="zc-product-title">
+          <?php echo esc_html($product->get_name()); ?>
+        </h1>
+
+        <div class="zc-product-rating-row">
+          <div class="zc-product-stars">
             <?php
-            if ($product->get_short_description()) {
-              echo wp_kses_post(wpautop($product->get_short_description()));
+            if ($average_rating > 0) {
+              echo wp_kses_post(wc_get_rating_html($average_rating, $review_count));
             } else {
-              echo '<p>Send us your logo or idea and we’ll handle the design for you. You’ll get a digital proof before we print.</p>';
+              echo '<span class="zc-empty-stars">★★★★★</span>';
             }
             ?>
           </div>
 
-          <div class="zc-product-benefits">
-            <div class="zc-product-benefit">
-              <svg viewBox="0 0 24 24">
-                <path d="M12 2l7 4v6c0 5-3 9-7 10-4-1-7-5-7-10V6l7-4z"></path>
-                <path d="M9 12l2 2 4-5"></path>
-              </svg>
-              <span>Premium<br>Print Quality</span>
-            </div>
+          <a href="#reviews" class="zc-product-review-link">
+            (<?php echo esc_html($review_count); ?> review<?php echo $review_count == 1 ? '' : 's'; ?>)
+          </a>
+        </div>
 
-            <div class="zc-product-benefit">
-              <svg viewBox="0 0 24 24">
-                <rect x="4" y="5" width="16" height="14" rx="2"></rect>
-                <path d="M8 14l3-3 3 3 2-2 4 4"></path>
-                <circle cx="9" cy="9" r="1"></circle>
-              </svg>
-              <span>Free Mockup<br>By Email</span>
-            </div>
+        <div class="zc-product-price">
+          <?php echo wp_kses_post($product->get_price_html()); ?>
+        </div>
 
-            <div class="zc-product-benefit">
-              <svg viewBox="0 0 24 24">
-                <path d="M3 7h11v9H3z"></path>
-                <path d="M14 10h4l3 3v3h-7z"></path>
-                <circle cx="7" cy="18" r="2"></circle>
-                <circle cx="18" cy="18" r="2"></circle>
-              </svg>
-              <span>Fast<br>Production</span>
-            </div>
+        <div class="zc-product-short-desc">
+          <?php
+          if ($product->get_short_description()) {
+            echo wp_kses_post(wpautop($product->get_short_description()));
+          } else {
+            echo '<p>Send us your logo or idea and we’ll handle the design for you. You’ll get a digital proof before we print.</p>';
+          }
+          ?>
+        </div>
 
-            <div class="zc-product-benefit">
-              <svg viewBox="0 0 24 24">
-                <path d="M12 3l8 4v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7l8-4z"></path>
-                <path d="M8 12h8"></path>
-              </svg>
-              <span>No Minimum<br>Order</span>
-            </div>
+        <div class="zc-product-benefits">
+          <div class="zc-product-benefit">
+            <svg viewBox="0 0 24 24">
+              <path d="M12 2l7 4v6c0 5-3 9-7 10-4-1-7-5-7-10V6l7-4z"></path>
+              <path d="M9 12l2 2 4-5"></path>
+            </svg>
+            <span>Premium<br>Print Quality</span>
           </div>
 
-          <div class="zc-product-form-area">
-            <?php
-            add_filter('woocommerce_product_single_add_to_cart_text', $button_text_filter);
-            woocommerce_template_single_add_to_cart();
-            remove_filter('woocommerce_product_single_add_to_cart_text', $button_text_filter);
-            ?>
-
-            <a href="<?php echo esc_url(home_url('/product-category/t-shirts')); ?>" class="zc-shop-blank-btn">
-              SHOP BLANK SHIRTS
-            </a>
+          <div class="zc-product-benefit">
+            <svg viewBox="0 0 24 24">
+              <rect x="4" y="5" width="16" height="14" rx="2"></rect>
+              <path d="M8 14l3-3 3 3 2-2 4 4"></path>
+              <circle cx="9" cy="9" r="1"></circle>
+            </svg>
+            <span>Free Mockup<br>By Email</span>
           </div>
 
-          <div class="zc-product-trust-row">
-            <span>100% Satisfaction Guarantee</span>
-            <span>Secure Checkout</span>
-            <span>Trusted by 10,000+ Customers</span>
+          <div class="zc-product-benefit">
+            <svg viewBox="0 0 24 24">
+              <path d="M3 7h11v9H3z"></path>
+              <path d="M14 10h4l3 3v3h-7z"></path>
+              <circle cx="7" cy="18" r="2"></circle>
+              <circle cx="18" cy="18" r="2"></circle>
+            </svg>
+            <span>Fast<br>Production</span>
           </div>
 
+          <div class="zc-product-benefit">
+            <svg viewBox="0 0 24 24">
+              <path d="M12 3l8 4v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7l8-4z"></path>
+              <path d="M8 12h8"></path>
+            </svg>
+            <span>No Minimum<br>Order</span>
+          </div>
+        </div>
+
+        <div class="zc-product-form-area" data-zc-product-form-area>
+          <?php
+          add_filter('woocommerce_product_single_add_to_cart_text', $button_text_filter);
+          woocommerce_template_single_add_to_cart();
+          remove_filter('woocommerce_product_single_add_to_cart_text', $button_text_filter);
+          ?>
+
+          <a href="<?php echo esc_url(home_url('/product-category/t-shirts')); ?>" class="zc-shop-blank-btn" data-zc-shop-blank-btn>
+            SHOP BLANK SHIRTS
+          </a>
+        </div>
+
+        <div class="zc-product-trust-row">
+          <span>100% Satisfaction Guarantee</span>
+          <span>Secure Checkout</span>
+          <span>Trusted by 10,000+ Customers</span>
         </div>
 
       </div>
 
     </div>
-  </section>
 
-</main>
+  </div>
+</section>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -703,6 +685,92 @@ document.addEventListener('DOMContentLoaded', function () {
         $('.variations_form').trigger('check_variations');
       }, 300);
     });
+  }
+
+  initZcQuantityAndButtons();
+
+  function initZcQuantityAndButtons() {
+    const formArea = document.querySelector('[data-zc-product-form-area]');
+    const shopBlankBtn = document.querySelector('[data-zc-shop-blank-btn]');
+
+    if (!formArea || !shopBlankBtn) return;
+
+    function moveShopButton() {
+      const addToCartRow =
+        formArea.querySelector('.woocommerce-variation-add-to-cart') ||
+        formArea.querySelector('form.cart:not(.variations_form)');
+
+      if (!addToCartRow) return;
+
+      if (!addToCartRow.querySelector('[data-zc-shop-blank-btn]')) {
+        addToCartRow.appendChild(shopBlankBtn);
+      }
+    }
+
+    function setupQuantityButtons() {
+      const quantities = formArea.querySelectorAll('.quantity');
+
+      quantities.forEach(function (quantity) {
+        const input = quantity.querySelector('input.qty');
+
+        if (!input || quantity.classList.contains('zc-qty-ready')) return;
+
+        quantity.classList.add('zc-qty-ready');
+
+        const minusBtn = document.createElement('button');
+        minusBtn.type = 'button';
+        minusBtn.className = 'zc-qty-btn zc-qty-btn--minus';
+        minusBtn.setAttribute('aria-label', 'Decrease quantity');
+        minusBtn.textContent = '−';
+
+        const plusBtn = document.createElement('button');
+        plusBtn.type = 'button';
+        plusBtn.className = 'zc-qty-btn zc-qty-btn--plus';
+        plusBtn.setAttribute('aria-label', 'Increase quantity');
+        plusBtn.textContent = '+';
+
+        input.insertAdjacentElement('beforebegin', minusBtn);
+        input.insertAdjacentElement('afterend', plusBtn);
+
+        minusBtn.addEventListener('click', function () {
+          const currentValue = parseFloat(input.value) || 1;
+          const min = parseFloat(input.getAttribute('min')) || 1;
+          const step = parseFloat(input.getAttribute('step')) || 1;
+          const newValue = Math.max(min, currentValue - step);
+
+          input.value = newValue;
+          input.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+
+        plusBtn.addEventListener('click', function () {
+          const currentValue = parseFloat(input.value) || 1;
+          const max = parseFloat(input.getAttribute('max'));
+          const step = parseFloat(input.getAttribute('step')) || 1;
+          let newValue = currentValue + step;
+
+          if (!Number.isNaN(max) && max > 0) {
+            newValue = Math.min(max, newValue);
+          }
+
+          input.value = newValue;
+          input.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+      });
+    }
+
+    moveShopButton();
+    setupQuantityButtons();
+
+    if (window.jQuery) {
+      jQuery(function ($) {
+        $('.variations_form').on('show_variation found_variation reset_data woocommerce_variation_has_changed', function () {
+          setTimeout(function () {
+            moveShopButton();
+            setupQuantityButtons();
+          }, 50);
+        });
+      });
+    }
   }
 
   function getColorValue(colorName) {
@@ -1015,6 +1083,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 .zc-product-form-area {
   margin-top: 18px;
+  max-width: 560px;
 }
 
 .zc-product-form-area form.cart {
@@ -1127,63 +1196,127 @@ document.addEventListener('DOMContentLoaded', function () {
 
 .zc-product-form-area .woocommerce-variation-add-to-cart,
 .zc-product-form-area form.cart:not(.variations_form) {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
+  display: grid !important;
+  grid-template-columns: 1fr 1fr;
+  align-items: stretch;
+  gap: 14px;
+  width: 100%;
+}
+
+.zc-product-form-area .woocommerce-variation-add-to-cart::before,
+.zc-product-form-area form.cart:not(.variations_form)::before {
+  content: "QUANTITY:";
+  grid-column: 1 / -1;
+  color: #111111;
+  font-size: 12px;
+  line-height: 1;
+  font-weight: 950;
+  text-transform: uppercase;
+  margin-bottom: -4px;
 }
 
 .zc-product-form-area .quantity {
-  display: inline-flex;
+  grid-column: 1 / -1;
+  width: 112px;
+  height: 38px;
+  display: grid !important;
+  grid-template-columns: 34px 44px 34px;
   align-items: center;
-  height: 44px;
   border: 1px solid #dddddd;
-  border-radius: 8px;
+  border-radius: 6px;
   overflow: hidden;
   background: #ffffff;
 }
 
 .zc-product-form-area .quantity input.qty {
-  width: 72px;
-  height: 44px;
+  width: 44px;
+  height: 38px;
+  padding: 0;
   border: 0;
   outline: 0;
   text-align: center;
   color: #111111;
   font-size: 14px;
   font-weight: 850;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.zc-product-form-area .quantity input.qty::-webkit-inner-spin-button,
+.zc-product-form-area .quantity input.qty::-webkit-outer-spin-button {
+  margin: 0;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.zc-qty-btn {
+  width: 34px;
+  height: 38px;
+  padding: 0;
+  border: 0;
+  background: #ffffff;
+  color: #111111;
+  font-size: 18px;
+  line-height: 1;
+  font-weight: 850;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.zc-qty-btn:hover {
+  background: #f5f5f5;
 }
 
 .zc-product-form-area .single_add_to_cart_button {
-  min-height: 48px;
-  padding: 0 28px !important;
-  border-radius: 8px !important;
+  grid-column: 1 / 2;
+  width: 100%;
+  min-height: 52px;
+  padding: 0 24px !important;
+  border-radius: 6px !important;
   background: #ff5b1a !important;
   color: #ffffff !important;
   border: 0 !important;
-  font-size: 12px !important;
+  font-size: 13px !important;
   font-weight: 950 !important;
   text-transform: uppercase;
   display: inline-flex !important;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 16px;
   transition: 0.2s ease;
+}
+
+.zc-product-form-area .single_add_to_cart_button::after {
+  content: "→";
+  font-size: 18px;
+  line-height: 1;
+  font-weight: 900;
 }
 
 .zc-product-form-area .single_add_to_cart_button:hover {
   background: #111111 !important;
 }
 
+.zc-product-form-area .single_add_to_cart_button.disabled,
+.zc-product-form-area .single_add_to_cart_button:disabled,
+.zc-product-form-area .single_add_to_cart_button.wc-variation-selection-needed {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .zc-shop-blank-btn {
-  min-height: 48px;
-  margin-top: 12px;
-  padding: 0 28px;
-  border-radius: 8px;
+  grid-column: 2 / 3;
+  width: 100%;
+  min-height: 52px;
+  margin-top: 0;
+  padding: 0 24px;
+  border-radius: 6px;
   background: #111111;
   color: #ffffff;
   text-decoration: none;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 950;
   text-transform: uppercase;
   display: inline-flex;
@@ -1277,11 +1410,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
   .zc-product-form-area .woocommerce-variation-add-to-cart,
   .zc-product-form-area form.cart:not(.variations_form) {
-    align-items: stretch;
+    grid-template-columns: 1fr;
   }
 
   .zc-product-form-area .single_add_to_cart_button,
   .zc-shop-blank-btn {
+    grid-column: 1 / -1;
     width: 100%;
   }
 }
