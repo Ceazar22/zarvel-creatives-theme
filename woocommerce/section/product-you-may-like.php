@@ -7,61 +7,31 @@ if (!is_a($product, 'WC_Product')) {
   $product = wc_get_product(get_the_ID());
 }
 
-if (!$product) {
-  return;
-}
-
-$current_product_id = $product->get_id();
-
 /**
- * Get related products first.
+ * Show up to 5 real WooCommerce products.
+ * Since you only have 2 products right now, it will show 2 cards only.
+ * No duplicate clone bullshit.
  */
-$related_ids = wc_get_related_products($current_product_id, 10);
+$you_may_like_products = wc_get_products([
+  'limit'   => 5,
+  'status'  => 'publish',
+  'orderby' => 'date',
+  'order'   => 'DESC',
+]);
 
-/**
- * Clean related IDs:
- * - remove current product
- * - remove duplicates
- */
-$related_ids = array_filter(array_unique($related_ids), function ($id) use ($current_product_id) {
-  return (int) $id !== (int) $current_product_id;
-});
+$clean_products = [];
 
-$related_products = [];
-
-if (!empty($related_ids)) {
-  foreach ($related_ids as $related_id) {
-    $related_product = wc_get_product($related_id);
-
-    if ($related_product && $related_product->is_visible()) {
-      $related_products[$related_product->get_id()] = $related_product;
-    }
+foreach ($you_may_like_products as $item_product) {
+  if (!$item_product || !$item_product->is_visible()) {
+    continue;
   }
+
+  $clean_products[$item_product->get_id()] = $item_product;
 }
 
-/**
- * Fallback: if WooCommerce related products are empty,
- * get latest products but still exclude current product.
- */
-if (empty($related_products)) {
-  $fallback_products = wc_get_products([
-    'limit'   => 10,
-    'status'  => 'publish',
-    'exclude' => [$current_product_id],
-    'orderby' => 'date',
-    'order'   => 'DESC',
-  ]);
+$you_may_like_products = array_values($clean_products);
 
-  foreach ($fallback_products as $fallback_product) {
-    if ($fallback_product && $fallback_product->is_visible()) {
-      $related_products[$fallback_product->get_id()] = $fallback_product;
-    }
-  }
-}
-
-$related_products = array_values($related_products);
-
-if (empty($related_products)) {
+if (empty($you_may_like_products)) {
   return;
 }
 ?>
@@ -87,10 +57,10 @@ if (empty($related_products)) {
       <div class="zc-you-may-like-viewport">
         <div class="zc-you-may-like-track">
 
-          <?php foreach ($related_products as $related_product) : ?>
+          <?php foreach ($you_may_like_products as $item_product) : ?>
             <?php
-            $related_product_id = $related_product->get_id();
-            $product_link = get_permalink($related_product_id);
+            $item_product_id = $item_product->get_id();
+            $product_link    = get_permalink($item_product_id);
             ?>
 
             <div class="zc-you-may-like-slide">
@@ -98,9 +68,9 @@ if (empty($related_products)) {
 
                 <a href="<?php echo esc_url($product_link); ?>" class="zc-you-may-like-image-wrap">
                   <?php
-                  echo $related_product->get_image('woocommerce_thumbnail', [
+                  echo $item_product->get_image('woocommerce_thumbnail', [
                     'class' => 'zc-you-may-like-image',
-                    'alt'   => esc_attr($related_product->get_name()),
+                    'alt'   => esc_attr($item_product->get_name()),
                   ]);
                   ?>
                 </a>
@@ -108,12 +78,12 @@ if (empty($related_products)) {
                 <div class="zc-you-may-like-info">
                   <h3 class="zc-you-may-like-name">
                     <a href="<?php echo esc_url($product_link); ?>">
-                      <?php echo esc_html($related_product->get_name()); ?>
+                      <?php echo esc_html($item_product->get_name()); ?>
                     </a>
                   </h3>
 
                   <div class="zc-you-may-like-price">
-                    <?php echo wp_kses_post($related_product->get_price_html()); ?>
+                    <?php echo wp_kses_post($item_product->get_price_html()); ?>
                   </div>
 
                   <a href="<?php echo esc_url($product_link); ?>" class="zc-you-may-like-view">
@@ -202,9 +172,8 @@ document.addEventListener('DOMContentLoaded', function () {
     gap = window.innerWidth <= 768 ? 14 : 16;
 
     /**
-     * Important:
-     * Only run infinite carousel if there are more products than visible cards.
-     * If there is only 1 product, do not clone it.
+     * Only infinite carousel if product count is MORE than visible cards.
+     * If you only have 2 products, no cloning. No duplicate cards.
      */
     isInfinite = originalCount > perView;
 
@@ -228,9 +197,13 @@ document.addEventListener('DOMContentLoaded', function () {
     slides = Array.from(track.children);
 
     const viewportWidth = viewport.clientWidth;
-    const activePerView = Math.min(perView, originalCount);
 
-    slideWidth = (viewportWidth - gap * (activePerView - 1)) / activePerView;
+    /**
+     * Important:
+     * Keep 5-column sizing on desktop even if there are only 2 products.
+     * This prevents one product from stretching like a bedsheet.
+     */
+    slideWidth = (viewportWidth - gap * (perView - 1)) / perView;
 
     slides.forEach(function (slide) {
       slide.style.flex = '0 0 ' + slideWidth + 'px';
@@ -417,6 +390,7 @@ document.addEventListener('DOMContentLoaded', function () {
 .zc-you-may-like-track {
   display: flex;
   align-items: stretch;
+  justify-content: flex-start;
   will-change: transform;
 }
 
