@@ -1,148 +1,95 @@
 <?php
-$zc_products = [
-  [
-    'badge' => 'BEST SELLER',
-    'name' => 'Anti Social Club Tee',
-    'price' => '₱699.00',
-    'old_price' => '',
-    'reviews' => '120',
-    'image' => 'hero-tshirt-white.png',
-    'slug' => 'anti-social-club-tee',
-  ],
-  [
-    'badge' => 'NEW',
-    'name' => 'Better Days Hoodie',
-    'price' => '₱1,199.00',
-    'old_price' => '',
-    'reviews' => '91',
-    'image' => 'hero-hoodie.png',
-    'slug' => 'better-days-hoodie',
-  ],
-  [
-    'badge' => '',
-    'name' => 'Coffee Makes Everything Better Mug',
-    'price' => '₱499.00',
-    'old_price' => '',
-    'reviews' => '76',
-    'image' => 'hero-mug.png',
-    'slug' => 'coffee-mug',
-  ],
-  [
-    'badge' => '',
-    'name' => 'Create Your Own Tee',
-    'price' => '₱699.00',
-    'old_price' => '',
-    'reviews' => '64',
-    'image' => 'hero-tshirt-white.png',
-    'slug' => 'create-your-own-tee',
-  ],
-  [
-    'badge' => '',
-    'name' => 'Minimal Crown Case',
-    'price' => '₱499.00',
-    'old_price' => '',
-    'reviews' => '53',
-    'image' => 'hero-tshirt-white.png',
-    'slug' => 'minimal-crown-case',
-  ],
-];
-
 $zc_shop_url = home_url('/shop/');
+
+$zc_categories = get_terms([
+  'taxonomy'   => 'product_cat',
+  'hide_empty' => false,
+  'orderby'    => 'name',
+  'order'      => 'ASC',
+]);
+
+if (is_wp_error($zc_categories)) {
+  $zc_categories = [];
+}
+
+/**
+ * Remove WooCommerce default Uncategorized category.
+ * If you really want to show Uncategorized, delete this filter.
+ */
+$zc_categories = array_filter($zc_categories, function ($category) {
+  return isset($category->slug) && $category->slug !== 'uncategorized';
+});
+
+if (empty($zc_categories)) {
+  return;
+}
+
+$zc_fallback_image = get_template_directory_uri() . '/assets/images/hero-tshirt-white.png';
 ?>
 
-<section class="zc-best-section">
-  <div class="zc-best-container">
+<section class="zc-home-categories">
+  <div class="zc-home-categories__container">
 
-    <div class="zc-best-head">
-      <h2 class="zc-best-title">BEST SELLING PRINTS</h2>
+    <div class="zc-home-categories__head">
+      <h2 class="zc-home-categories__title">SHOP BY CATEGORY</h2>
 
-      <a href="<?php echo esc_url($zc_shop_url); ?>" class="zc-best-view-all">
-        View all
+      <a href="<?php echo esc_url($zc_shop_url); ?>" class="zc-home-categories__view-all">
+        View all products
       </a>
     </div>
 
-    <div class="zc-best-carousel" data-zc-best-carousel>
-      <button class="zc-best-carousel__btn zc-best-carousel__btn--prev" type="button" aria-label="Previous product">
+    <div class="zc-category-carousel" data-zc-category-carousel>
+      <button class="zc-category-carousel__btn zc-category-carousel__btn--prev" type="button" aria-label="Previous category">
         ‹
       </button>
 
-      <div class="zc-best-carousel__viewport">
-        <div class="zc-best-carousel__track">
+      <div class="zc-category-carousel__viewport">
+        <div class="zc-category-carousel__track">
 
-          <?php foreach ($zc_products as $zc_product) : ?>
+          <?php foreach ($zc_categories as $zc_category) : ?>
             <?php
-              $zc_image_url = get_template_directory_uri() . '/assets/images/' . $zc_product['image'];
-              $zc_product_url = $zc_shop_url;
-              $zc_badge_class = '';
+            $zc_category_link = get_term_link($zc_category);
 
-              if ($zc_product['badge'] === 'NEW') {
-                $zc_badge_class = ' zc-best-badge--new';
-              }
+            if (is_wp_error($zc_category_link)) {
+              $zc_category_link = $zc_shop_url;
+            }
+
+            $zc_thumbnail_id = get_term_meta($zc_category->term_id, 'thumbnail_id', true);
+
+            $zc_category_image = $zc_thumbnail_id
+              ? wp_get_attachment_image_url($zc_thumbnail_id, 'woocommerce_thumbnail')
+              : $zc_fallback_image;
             ?>
 
-            <div class="zc-best-carousel__slide">
-              <article class="zc-best-card">
+            <div class="zc-category-carousel__slide">
+              <a href="<?php echo esc_url($zc_category_link); ?>" class="zc-category-card">
 
-                <a href="<?php echo esc_url($zc_product_url); ?>" class="zc-best-image-wrap">
-                  <?php if (!empty($zc_product['badge'])) : ?>
-                    <span class="zc-best-badge<?php echo esc_attr($zc_badge_class); ?>">
-                      <?php echo esc_html($zc_product['badge']); ?>
-                    </span>
-                  <?php endif; ?>
+                <div
+                  class="zc-category-card__image"
+                  style="background-image: url('<?php echo esc_url($zc_category_image); ?>');"
+                ></div>
 
-                  <img
-                    src="<?php echo esc_url($zc_image_url); ?>"
-                    alt="<?php echo esc_attr($zc_product['name']); ?>"
-                    class="zc-best-image"
-                  >
-                </a>
+                <div class="zc-category-card__bottom">
+                  <span class="zc-category-card__name">
+                    <?php echo esc_html($zc_category->name); ?>
+                  </span>
 
-                <div class="zc-best-info">
-                  <h3 class="zc-best-name">
-                    <a href="<?php echo esc_url($zc_product_url); ?>">
-                      <?php echo esc_html($zc_product['name']); ?>
-                    </a>
-                  </h3>
-
-                  <div class="zc-best-price-row">
-                    <div class="zc-best-price-wrap">
-                      <span class="zc-best-price">
-                        <?php echo esc_html($zc_product['price']); ?>
-                      </span>
-
-                      <?php if (!empty($zc_product['old_price'])) : ?>
-                        <span class="zc-best-old-price">
-                          <?php echo esc_html($zc_product['old_price']); ?>
-                        </span>
-                      <?php endif; ?>
-                    </div>
-
-                    <a href="<?php echo esc_url($zc_product_url); ?>" class="zc-best-cart" aria-label="View product">
-                      <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M6 6h15l-2 9H8L6 6z"></path>
-                        <path d="M6 6 5 2H2"></path>
-                        <circle cx="9" cy="21" r="1"></circle>
-                        <circle cx="18" cy="21" r="1"></circle>
-                      </svg>
-                    </a>
-                  </div>
-
-                  <div class="zc-best-rating">
-                    <span class="zc-best-stars">★★★★★</span>
-                    <span class="zc-best-review-count">
-                      (<?php echo esc_html($zc_product['reviews']); ?>)
-                    </span>
-                  </div>
+                  <span class="zc-category-card__arrow">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M8 12h8"></path>
+                      <path d="M13 7l5 5-5 5"></path>
+                    </svg>
+                  </span>
                 </div>
 
-              </article>
+              </a>
             </div>
           <?php endforeach; ?>
 
         </div>
       </div>
 
-      <button class="zc-best-carousel__btn zc-best-carousel__btn--next" type="button" aria-label="Next product">
+      <button class="zc-category-carousel__btn zc-category-carousel__btn--next" type="button" aria-label="Next category">
         ›
       </button>
     </div>
@@ -152,13 +99,13 @@ $zc_shop_url = home_url('/shop/');
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-  const carousel = document.querySelector('[data-zc-best-carousel]');
+  const carousel = document.querySelector('[data-zc-category-carousel]');
   if (!carousel) return;
 
-  const viewport = carousel.querySelector('.zc-best-carousel__viewport');
-  const track = carousel.querySelector('.zc-best-carousel__track');
-  const prevBtn = carousel.querySelector('.zc-best-carousel__btn--prev');
-  const nextBtn = carousel.querySelector('.zc-best-carousel__btn--next');
+  const viewport = carousel.querySelector('.zc-category-carousel__viewport');
+  const track = carousel.querySelector('.zc-category-carousel__track');
+  const prevBtn = carousel.querySelector('.zc-category-carousel__btn--prev');
+  const nextBtn = carousel.querySelector('.zc-category-carousel__btn--next');
 
   if (!viewport || !track || !prevBtn || !nextBtn) return;
 
@@ -167,25 +114,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
   if (!originalCount) return;
 
-  originalSlides.forEach(function (slide) {
-    const clone = slide.cloneNode(true);
-    clone.classList.add('is-clone');
-    track.appendChild(clone);
-  });
-
-  originalSlides.slice().reverse().forEach(function (slide) {
-    const clone = slide.cloneNode(true);
-    clone.classList.add('is-clone');
-    track.insertBefore(clone, track.firstChild);
-  });
-
   let slides = Array.from(track.children);
-  let currentIndex = originalCount;
+  let currentIndex = 0;
   let slideWidth = 0;
-  let gap = 18;
+  let gap = 16;
   let perView = 5;
   let autoplay = null;
   let isMoving = false;
+  let isInfinite = false;
 
   function getPerView() {
     const width = window.innerWidth;
@@ -197,11 +133,58 @@ document.addEventListener('DOMContentLoaded', function () {
     return 5;
   }
 
+  function clearClones() {
+    track.querySelectorAll('.is-clone').forEach(function (clone) {
+      clone.remove();
+    });
+
+    slides = Array.from(track.children);
+  }
+
+  function buildClones() {
+    clearClones();
+
+    originalSlides.forEach(function (slide) {
+      const clone = slide.cloneNode(true);
+      clone.classList.add('is-clone');
+      track.appendChild(clone);
+    });
+
+    originalSlides.slice().reverse().forEach(function (slide) {
+      const clone = slide.cloneNode(true);
+      clone.classList.add('is-clone');
+      track.insertBefore(clone, track.firstChild);
+    });
+
+    slides = Array.from(track.children);
+    currentIndex = originalCount;
+  }
+
   function setSizes() {
     perView = getPerView();
-    gap = window.innerWidth <= 768 ? 16 : 18;
+    gap = window.innerWidth <= 768 ? 14 : 16;
+
+    isInfinite = originalCount > perView;
+
+    if (isInfinite) {
+      if (!track.querySelector('.is-clone')) {
+        buildClones();
+      }
+
+      prevBtn.style.display = 'flex';
+      nextBtn.style.display = 'flex';
+    } else {
+      clearClones();
+      currentIndex = 0;
+
+      prevBtn.style.display = 'none';
+      nextBtn.style.display = 'none';
+    }
+
+    slides = Array.from(track.children);
 
     const viewportWidth = viewport.clientWidth;
+
     slideWidth = (viewportWidth - gap * (perView - 1)) / perView;
 
     slides.forEach(function (slide) {
@@ -210,6 +193,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     track.style.gap = gap + 'px';
     moveToIndex(currentIndex, false);
+
+    if (isInfinite) {
+      startAutoplay();
+    } else {
+      stopAutoplay();
+    }
   }
 
   function moveToIndex(index, animate = true) {
@@ -220,7 +209,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function goNext() {
-    if (isMoving) return;
+    if (!isInfinite || isMoving) return;
 
     isMoving = true;
     currentIndex++;
@@ -228,7 +217,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function goPrev() {
-    if (isMoving) return;
+    if (!isInfinite || isMoving) return;
 
     isMoving = true;
     currentIndex--;
@@ -236,6 +225,8 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   track.addEventListener('transitionend', function () {
+    if (!isInfinite) return;
+
     isMoving = false;
 
     if (currentIndex >= originalCount * 2) {
@@ -252,9 +243,11 @@ document.addEventListener('DOMContentLoaded', function () {
   function startAutoplay() {
     stopAutoplay();
 
+    if (!isInfinite) return;
+
     autoplay = setInterval(function () {
       goNext();
-    }, 2800);
+    }, 2600);
   }
 
   function stopAutoplay() {
@@ -278,237 +271,156 @@ document.addEventListener('DOMContentLoaded', function () {
   carousel.addEventListener('mouseleave', startAutoplay);
 
   window.addEventListener('resize', function () {
-    slides = Array.from(track.children);
     setSizes();
   });
 
   setSizes();
-  startAutoplay();
 });
 </script>
 
 <style>
-.zc-best-section {
-  padding: 20px 0 75px;
+.zc-home-categories {
+  padding: 70px 0;
   background: #ffffff;
   overflow: hidden;
 }
 
-.zc-best-container {
+.zc-home-categories__container {
   width: min(100% - 40px, 1280px);
   margin: 0 auto;
 }
 
-.zc-best-head {
-  position: relative;
+.zc-home-categories__head {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 26px;
+  position: relative;
+  margin-bottom: 28px;
 }
 
-.zc-best-title {
+.zc-home-categories__title {
   margin: 0;
   color: #111111;
-  font-size: 34px;
+  font-size: 38px;
   line-height: 1;
-  font-weight: 950;
-  text-align: center;
+  font-weight: 900;
   text-transform: uppercase;
-  letter-spacing: -0.5px;
+  text-align: center;
 }
 
-.zc-best-view-all {
+.zc-home-categories__view-all {
   position: absolute;
   right: 0;
   top: 50%;
   transform: translateY(-50%);
   color: #ff5b1a;
-  font-size: 14px;
-  font-weight: 900;
+  font-size: 15px;
+  font-weight: 800;
   text-decoration: none;
   transition: 0.2s ease;
 }
 
-.zc-best-view-all:hover {
+.zc-home-categories__view-all:hover {
   opacity: 0.75;
 }
 
-.zc-best-carousel {
+.zc-category-carousel {
   position: relative;
 }
 
-.zc-best-carousel__viewport {
-  width: 100%;
+.zc-category-carousel__viewport {
   overflow: hidden;
+  width: 100%;
 }
 
-.zc-best-carousel__track {
+.zc-category-carousel__track {
   display: flex;
   align-items: stretch;
+  justify-content: flex-start;
   will-change: transform;
 }
 
-.zc-best-carousel__slide {
+.zc-category-carousel__slide {
   min-width: 0;
 }
 
-.zc-best-card {
-  position: relative;
-  overflow: hidden;
-  border-radius: 14px;
-  background: #ffffff;
-  transition: 0.25s ease;
-  height: 100%;
-}
-
-.zc-best-card:hover {
-  transform: translateY(-4px);
-}
-
-.zc-best-image-wrap {
-  position: relative;
+.zc-category-card {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 210px;
-  padding: 16px;
-  border-radius: 14px;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 255px;
+  padding: 14px;
   background: #f7f7f7;
+  border: 1px solid #ececec;
+  border-radius: 14px;
   text-decoration: none;
-  overflow: hidden;
-}
-
-.zc-best-image {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  display: block;
   transition: 0.25s ease;
+  height: 100%;
 }
 
-.zc-best-card:hover .zc-best-image {
-  transform: scale(1.04);
+.zc-category-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 28px rgba(0, 0, 0, 0.08);
 }
 
-.zc-best-badge {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  z-index: 2;
-  background: #ff5b1a;
-  color: #ffffff;
-  font-size: 10px;
-  line-height: 1;
-  font-weight: 950;
-  text-transform: uppercase;
-  letter-spacing: 0.2px;
-  padding: 7px 9px;
-  border-radius: 6px;
+.zc-category-card__image {
+  width: 100%;
+  height: 165px;
+  border-radius: 12px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
 }
 
-.zc-best-badge--new {
-  background: #111111;
-}
-
-.zc-best-info {
-  padding: 12px 2px 0;
-}
-
-.zc-best-name {
-  margin: 0 0 7px;
-  font-size: 14px;
-  line-height: 1.25;
-  font-weight: 900;
-}
-
-.zc-best-name a {
-  color: #222222;
-  text-decoration: none;
-}
-
-.zc-best-name a:hover {
-  color: #ff5b1a;
-}
-
-.zc-best-price-row {
+.zc-category-card__bottom {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 12px;
+  padding-top: 12px;
 }
 
-.zc-best-price-wrap {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  flex-wrap: wrap;
+.zc-category-card__name {
+  color: #222222;
+  font-size: 16px;
+  line-height: 1.2;
+  font-weight: 800;
 }
 
-.zc-best-price {
-  color: #ff5b1a;
-  font-size: 14px;
-  line-height: 1;
-  font-weight: 950;
-}
-
-.zc-best-old-price {
-  color: #999999;
-  font-size: 12px;
-  font-weight: 700;
-  text-decoration: line-through;
-}
-
-.zc-best-cart {
-  width: 34px;
-  height: 34px;
-  min-width: 34px;
-  border-radius: 8px;
-  background: #ff5b1a;
-  color: #ffffff;
+.zc-category-card__arrow {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  border-radius: 50%;
+  border: 1px solid #d9d9d9;
+  background: #ffffff;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  text-decoration: none;
   transition: 0.2s ease;
 }
 
-.zc-best-cart:hover {
-  background: #111111;
+.zc-category-card:hover .zc-category-card__arrow {
+  background: #ff5b1a;
+  border-color: #ff5b1a;
 }
 
-.zc-best-cart svg {
-  width: 18px;
-  height: 18px;
+.zc-category-card__arrow svg {
+  width: 15px;
+  height: 15px;
   fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
+  stroke: #222222;
+  stroke-width: 1.9;
   stroke-linecap: round;
   stroke-linejoin: round;
+  transition: 0.2s ease;
 }
 
-.zc-best-rating {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  margin-top: 7px;
+.zc-category-card:hover .zc-category-card__arrow svg {
+  stroke: #ffffff;
 }
 
-.zc-best-stars {
-  color: #ffb000;
-  font-size: 12px;
-  letter-spacing: 1px;
-  line-height: 1;
-}
-
-.zc-best-review-count {
-  color: #777777;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-/* Carousel buttons */
-.zc-best-carousel__btn {
+.zc-category-carousel__btn {
   position: absolute;
   top: 50%;
   z-index: 5;
@@ -530,13 +442,13 @@ document.addEventListener('DOMContentLoaded', function () {
   transition: 0.2s ease;
 }
 
-.zc-best-carousel__btn:hover {
+.zc-category-carousel__btn:hover {
   background: #ff5b1a;
   border-color: #ff5b1a;
   color: #ffffff;
 }
 
-.zc-best-carousel__btn::before {
+.zc-category-carousel__btn::before {
   content: "";
   width: 9px;
   height: 9px;
@@ -545,83 +457,93 @@ document.addEventListener('DOMContentLoaded', function () {
   border-right: 2px solid currentColor;
 }
 
-.zc-best-carousel__btn--prev {
+.zc-category-carousel__btn--prev {
   left: -19px;
 }
 
-.zc-best-carousel__btn--prev::before {
+.zc-category-carousel__btn--prev::before {
   transform: rotate(-135deg);
   margin-left: 3px;
 }
 
-.zc-best-carousel__btn--next {
+.zc-category-carousel__btn--next {
   right: -19px;
 }
 
-.zc-best-carousel__btn--next::before {
+.zc-category-carousel__btn--next::before {
   transform: rotate(45deg);
   margin-right: 3px;
 }
 
-/* 1024 */
 @media screen and (max-width: 1024px) {
-  .zc-best-image-wrap {
-    height: 200px;
+  .zc-category-card {
+    min-height: 245px;
   }
 }
 
-/* 768 */
 @media screen and (max-width: 768px) {
-  .zc-best-section {
-    padding: 15px 0 55px;
+  .zc-home-categories {
+    padding: 50px 0;
   }
 
-  .zc-best-container {
+  .zc-home-categories__container {
     width: min(100% - 30px, 1280px);
   }
 
-  .zc-best-head {
+  .zc-home-categories__head {
     flex-direction: column;
     gap: 12px;
     margin-bottom: 22px;
   }
 
-  .zc-best-view-all {
+  .zc-home-categories__view-all {
     position: static;
     transform: none;
   }
 
-  .zc-best-title {
+  .zc-home-categories__title {
     font-size: 28px;
   }
 
-  .zc-best-image-wrap {
-    height: 180px;
+  .zc-category-card {
+    min-height: 220px;
+    padding: 12px;
   }
 
-  .zc-best-carousel__btn {
+  .zc-category-card__image {
+    height: 135px;
+  }
+
+  .zc-category-card__name {
+    font-size: 14px;
+  }
+
+  .zc-category-carousel__btn {
     width: 34px;
     height: 34px;
   }
 
-  .zc-best-carousel__btn::before {
+  .zc-category-carousel__btn::before {
     width: 8px;
     height: 8px;
   }
 
-  .zc-best-carousel__btn--prev {
+  .zc-category-carousel__btn--prev {
     left: -12px;
   }
 
-  .zc-best-carousel__btn--next {
+  .zc-category-carousel__btn--next {
     right: -12px;
   }
 }
 
-/* 480 */
 @media screen and (max-width: 480px) {
-  .zc-best-image-wrap {
-    height: 210px;
+  .zc-category-card {
+    min-height: 210px;
+  }
+
+  .zc-category-card__image {
+    height: 130px;
   }
 }
 </style>
