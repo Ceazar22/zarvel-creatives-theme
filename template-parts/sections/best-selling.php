@@ -12,19 +12,60 @@ if (is_wp_error($zc_categories)) {
   $zc_categories = [];
 }
 
-/**
- * Remove WooCommerce default Uncategorized category.
- * If you really want to show Uncategorized, delete this filter.
- */
-$zc_categories = array_filter($zc_categories, function ($category) {
-  return isset($category->slug) && $category->slug !== 'uncategorized';
-});
-
 if (empty($zc_categories)) {
   return;
 }
 
 $zc_fallback_image = get_template_directory_uri() . '/assets/images/hero-tshirt-white.png';
+
+/**
+ * Get category image.
+ * Priority:
+ * 1. WooCommerce category thumbnail
+ * 2. First product image inside category
+ * 3. Theme fallback image
+ */
+function zc_get_category_display_image($category, $fallback_image) {
+  if (!$category || empty($category->term_id)) {
+    return $fallback_image;
+  }
+
+  $thumbnail_id = get_term_meta($category->term_id, 'thumbnail_id', true);
+
+  if ($thumbnail_id) {
+    $category_image = wp_get_attachment_image_url($thumbnail_id, 'woocommerce_thumbnail');
+
+    if ($category_image) {
+      return $category_image;
+    }
+  }
+
+  if (!function_exists('wc_get_products')) {
+    return $fallback_image;
+  }
+
+  $category_products = wc_get_products([
+    'limit'    => 1,
+    'status'   => 'publish',
+    'category' => [$category->slug],
+    'orderby'  => 'menu_order',
+    'order'    => 'ASC',
+  ]);
+
+  if (!empty($category_products)) {
+    $first_product = $category_products[0];
+
+    if ($first_product && $first_product->get_image_id()) {
+      $product_image = wp_get_attachment_image_url($first_product->get_image_id(), 'woocommerce_thumbnail');
+
+      if ($product_image) {
+        return $product_image;
+      }
+    }
+  }
+
+  return $fallback_image;
+}
 ?>
 
 <section class="zc-home-categories">
@@ -54,11 +95,7 @@ $zc_fallback_image = get_template_directory_uri() . '/assets/images/hero-tshirt-
               $zc_category_link = $zc_shop_url;
             }
 
-            $zc_thumbnail_id = get_term_meta($zc_category->term_id, 'thumbnail_id', true);
-
-            $zc_category_image = $zc_thumbnail_id
-              ? wp_get_attachment_image_url($zc_thumbnail_id, 'woocommerce_thumbnail')
-              : $zc_fallback_image;
+            $zc_category_image = zc_get_category_display_image($zc_category, $zc_fallback_image);
             ?>
 
             <div class="zc-category-carousel__slide">
