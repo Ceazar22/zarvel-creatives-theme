@@ -1,29 +1,75 @@
 <?php
-$zc_categories = [
-  [
-    'name' => 'T-Shirts',
-    'slug' => 't-shirts',
-  ],
-  [
-    'name' => 'Hoodies',
-    'slug' => 'hoodies',
-  ],
-  [
-    'name' => 'Mugs',
-    'slug' => 'mugs',
-  ],
-  [
-    'name' => 'Tote Bags',
-    'slug' => 'tote-bags',
-  ],
-  [
-    'name' => 'Phone Cases',
-    'slug' => 'phone-cases',
-  ],
-];
+defined('ABSPATH') || exit;
 
 $zc_fallback_url = home_url('/shop/');
-$zc_card_image   = get_template_directory_uri() . '/assets/images/hero-tshirt-white.png';
+
+$zc_categories = get_terms([
+  'taxonomy'   => 'product_cat',
+  'hide_empty' => false,
+  'orderby'    => 'name',
+  'order'      => 'ASC',
+]);
+
+if (is_wp_error($zc_categories) || empty($zc_categories)) {
+  return;
+}
+
+if (!function_exists('zc_category_get_first_product_image')) {
+  function zc_category_get_first_product_image($category) {
+    if (!$category || empty($category->term_id)) {
+      return '';
+    }
+
+    $product_ids = get_posts([
+      'post_type'      => 'product',
+      'post_status'    => 'publish',
+      'posts_per_page' => 1,
+      'fields'         => 'ids',
+      'tax_query'      => [
+        [
+          'taxonomy'         => 'product_cat',
+          'field'            => 'term_id',
+          'terms'            => [$category->term_id],
+          'include_children' => true,
+        ],
+      ],
+    ]);
+
+    if (empty($product_ids)) {
+      return '';
+    }
+
+    $product = wc_get_product($product_ids[0]);
+
+    if (!$product || !$product->get_image_id()) {
+      return '';
+    }
+
+    return wp_get_attachment_image_url($product->get_image_id(), 'woocommerce_thumbnail');
+  }
+}
+
+if (!function_exists('zc_category_get_image')) {
+  function zc_category_get_image($category) {
+    $thumbnail_id = get_term_meta($category->term_id, 'thumbnail_id', true);
+
+    if ($thumbnail_id) {
+      $image = wp_get_attachment_image_url($thumbnail_id, 'woocommerce_thumbnail');
+
+      if ($image) {
+        return $image;
+      }
+    }
+
+    $first_product_image = zc_category_get_first_product_image($category);
+
+    if ($first_product_image) {
+      return $first_product_image;
+    }
+
+    return wc_placeholder_img_src('woocommerce_thumbnail');
+  }
+}
 ?>
 
 <section class="zc-home-categories">
@@ -44,22 +90,28 @@ $zc_card_image   = get_template_directory_uri() . '/assets/images/hero-tshirt-wh
 
       <div class="zc-category-carousel__viewport">
         <div class="zc-category-carousel__track">
+
           <?php foreach ($zc_categories as $zc_category) : ?>
             <?php
-            $zc_term = get_term_by('slug', $zc_category['slug'], 'product_cat');
-            $zc_link = $zc_term && !is_wp_error($zc_term) ? get_term_link($zc_term) : $zc_fallback_url;
+            $zc_link = get_term_link($zc_category);
+
+            if (is_wp_error($zc_link)) {
+              $zc_link = $zc_fallback_url;
+            }
+
+            $zc_image = zc_category_get_image($zc_category);
             ?>
 
             <div class="zc-category-carousel__slide">
               <a href="<?php echo esc_url($zc_link); ?>" class="zc-category-card">
                 <div
                   class="zc-category-card__image"
-                  style="background-image: url('<?php echo esc_url($zc_card_image); ?>');"
+                  style="background-image: url('<?php echo esc_url($zc_image); ?>');"
                 ></div>
 
                 <div class="zc-category-card__bottom">
                   <span class="zc-category-card__name">
-                    <?php echo esc_html($zc_category['name']); ?>
+                    <?php echo esc_html($zc_category->name); ?>
                   </span>
 
                   <span class="zc-category-card__arrow">
@@ -72,6 +124,7 @@ $zc_card_image   = get_template_directory_uri() . '/assets/images/hero-tshirt-wh
               </a>
             </div>
           <?php endforeach; ?>
+
         </div>
       </div>
 
@@ -100,25 +153,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
   if (!originalCount) return;
 
-  originalSlides.forEach(function (slide) {
-    const clone = slide.cloneNode(true);
-    clone.classList.add('is-clone');
-    track.appendChild(clone);
-  });
-
-  originalSlides.slice().reverse().forEach(function (slide) {
-    const clone = slide.cloneNode(true);
-    clone.classList.add('is-clone');
-    track.insertBefore(clone, track.firstChild);
-  });
-
   let slides = Array.from(track.children);
-  let currentIndex = originalCount;
+  let currentIndex = 0;
   let slideWidth = 0;
   let gap = 16;
   let perView = 5;
   let autoplay = null;
   let isMoving = false;
+  let isInfinite = false;
 
   function getPerView() {
     const width = window.innerWidth;
@@ -130,9 +172,55 @@ document.addEventListener('DOMContentLoaded', function () {
     return 5;
   }
 
+  function clearClones() {
+    track.querySelectorAll('.is-clone').forEach(function (clone) {
+      clone.remove();
+    });
+
+    slides = Array.from(track.children);
+  }
+
+  function buildClones() {
+    clearClones();
+
+    originalSlides.forEach(function (slide) {
+      const clone = slide.cloneNode(true);
+      clone.classList.add('is-clone');
+      track.appendChild(clone);
+    });
+
+    originalSlides.slice().reverse().forEach(function (slide) {
+      const clone = slide.cloneNode(true);
+      clone.classList.add('is-clone');
+      track.insertBefore(clone, track.firstChild);
+    });
+
+    slides = Array.from(track.children);
+    currentIndex = originalCount;
+  }
+
   function setSizes() {
     perView = getPerView();
     gap = window.innerWidth <= 768 ? 14 : 16;
+
+    isInfinite = originalCount > perView;
+
+    if (isInfinite) {
+      if (!track.querySelector('.is-clone')) {
+        buildClones();
+      }
+
+      prevBtn.style.display = 'flex';
+      nextBtn.style.display = 'flex';
+    } else {
+      clearClones();
+      currentIndex = 0;
+
+      prevBtn.style.display = 'none';
+      nextBtn.style.display = 'none';
+    }
+
+    slides = Array.from(track.children);
 
     const viewportWidth = viewport.clientWidth;
     slideWidth = (viewportWidth - gap * (perView - 1)) / perView;
@@ -143,6 +231,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     track.style.gap = gap + 'px';
     moveToIndex(currentIndex, false);
+
+    if (isInfinite) {
+      startAutoplay();
+    } else {
+      stopAutoplay();
+    }
   }
 
   function moveToIndex(index, animate = true) {
@@ -153,7 +247,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function goNext() {
-    if (isMoving) return;
+    if (!isInfinite || isMoving) return;
 
     isMoving = true;
     currentIndex++;
@@ -161,7 +255,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function goPrev() {
-    if (isMoving) return;
+    if (!isInfinite || isMoving) return;
 
     isMoving = true;
     currentIndex--;
@@ -169,6 +263,8 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   track.addEventListener('transitionend', function () {
+    if (!isInfinite) return;
+
     isMoving = false;
 
     if (currentIndex >= originalCount * 2) {
@@ -184,6 +280,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
   function startAutoplay() {
     stopAutoplay();
+
+    if (!isInfinite) return;
 
     autoplay = setInterval(function () {
       goNext();
@@ -211,12 +309,10 @@ document.addEventListener('DOMContentLoaded', function () {
   carousel.addEventListener('mouseleave', startAutoplay);
 
   window.addEventListener('resize', function () {
-    slides = Array.from(track.children);
     setSizes();
   });
 
   setSizes();
-  startAutoplay();
 });
 </script>
 
@@ -361,7 +457,6 @@ document.addEventListener('DOMContentLoaded', function () {
   stroke: #ffffff;
 }
 
-/* Carousel buttons */
 .zc-category-carousel__btn {
   position: absolute;
   top: 50%;
@@ -417,14 +512,12 @@ document.addEventListener('DOMContentLoaded', function () {
   margin-right: 3px;
 }
 
-/* 1024 */
 @media screen and (max-width: 1024px) {
   .zc-category-card {
     min-height: 245px;
   }
 }
 
-/* 768 */
 @media screen and (max-width: 768px) {
   .zc-home-categories {
     padding: 50px 0;
@@ -481,7 +574,6 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 }
 
-/* 480 */
 @media screen and (max-width: 480px) {
   .zc-category-card {
     min-height: 210px;
