@@ -1,53 +1,18 @@
 <?php
-$zc_products = [
-  [
-    'badge' => 'BEST SELLER',
-    'name' => 'Anti Social Club Tee',
-    'price' => '₱699.00',
-    'old_price' => '',
-    'reviews' => '120',
-    'image' => 'hero-tshirt-white.png',
-    'slug' => 'anti-social-club-tee',
-  ],
-  [
-    'badge' => 'NEW',
-    'name' => 'Better Days Hoodie',
-    'price' => '₱1,199.00',
-    'old_price' => '',
-    'reviews' => '91',
-    'image' => 'hero-hoodie.png',
-    'slug' => 'better-days-hoodie',
-  ],
-  [
-    'badge' => '',
-    'name' => 'Coffee Makes Everything Better Mug',
-    'price' => '₱499.00',
-    'old_price' => '',
-    'reviews' => '76',
-    'image' => 'hero-mug.png',
-    'slug' => 'coffee-mug',
-  ],
-  [
-    'badge' => '',
-    'name' => 'Create Your Own Tee',
-    'price' => '₱699.00',
-    'old_price' => '',
-    'reviews' => '64',
-    'image' => 'hero-tshirt-white.png',
-    'slug' => 'create-your-own-tee',
-  ],
-  [
-    'badge' => '',
-    'name' => 'Minimal Crown Case',
-    'price' => '₱499.00',
-    'old_price' => '',
-    'reviews' => '53',
-    'image' => 'hero-tshirt-white.png',
-    'slug' => 'minimal-crown-case',
-  ],
-];
+defined('ABSPATH') || exit;
 
 $zc_shop_url = home_url('/shop/');
+
+$zc_products = wc_get_products([
+  'limit'   => -1,
+  'status'  => 'publish',
+  'orderby' => 'date',
+  'order'   => 'DESC',
+]);
+
+if (empty($zc_products)) {
+  return;
+}
 ?>
 
 <section class="zc-best-section">
@@ -71,50 +36,66 @@ $zc_shop_url = home_url('/shop/');
 
           <?php foreach ($zc_products as $zc_product) : ?>
             <?php
-              $zc_image_url = get_template_directory_uri() . '/assets/images/' . $zc_product['image'];
-              $zc_product_url = $zc_shop_url;
-              $zc_badge_class = '';
+            if (!$zc_product || !$zc_product->is_visible()) {
+              continue;
+            }
 
-              if ($zc_product['badge'] === 'NEW') {
+            $zc_product_id   = $zc_product->get_id();
+            $zc_product_url  = get_permalink($zc_product_id);
+            $zc_product_name = $zc_product->get_name();
+            $zc_review_count = $zc_product->get_review_count();
+            $zc_rating       = (float) $zc_product->get_average_rating();
+
+            $zc_badge = '';
+            $zc_badge_class = '';
+
+            if ($zc_product->is_on_sale()) {
+              $zc_badge = 'SALE';
+            } elseif ($zc_product->is_featured()) {
+              $zc_badge = 'BEST SELLER';
+            } else {
+              $published_date = get_post_time('U', true, $zc_product_id);
+              $days_old = (time() - $published_date) / DAY_IN_SECONDS;
+
+              if ($days_old <= 14) {
+                $zc_badge = 'NEW';
                 $zc_badge_class = ' zc-best-badge--new';
               }
+            }
+
+            if ($zc_badge === 'SALE') {
+              $zc_badge_class = ' zc-best-badge--sale';
+            }
             ?>
 
             <div class="zc-best-carousel__slide">
               <article class="zc-best-card">
 
                 <a href="<?php echo esc_url($zc_product_url); ?>" class="zc-best-image-wrap">
-                  <?php if (!empty($zc_product['badge'])) : ?>
+                  <?php if (!empty($zc_badge)) : ?>
                     <span class="zc-best-badge<?php echo esc_attr($zc_badge_class); ?>">
-                      <?php echo esc_html($zc_product['badge']); ?>
+                      <?php echo esc_html($zc_badge); ?>
                     </span>
                   <?php endif; ?>
 
-                  <img
-                    src="<?php echo esc_url($zc_image_url); ?>"
-                    alt="<?php echo esc_attr($zc_product['name']); ?>"
-                    class="zc-best-image"
-                  >
+                  <?php
+                  echo $zc_product->get_image('woocommerce_thumbnail', [
+                    'class' => 'zc-best-image',
+                    'alt'   => esc_attr($zc_product_name),
+                  ]);
+                  ?>
                 </a>
 
                 <div class="zc-best-info">
                   <h3 class="zc-best-name">
                     <a href="<?php echo esc_url($zc_product_url); ?>">
-                      <?php echo esc_html($zc_product['name']); ?>
+                      <?php echo esc_html($zc_product_name); ?>
                     </a>
                   </h3>
 
                   <div class="zc-best-price-row">
                     <div class="zc-best-price-wrap">
-                      <span class="zc-best-price">
-                        <?php echo esc_html($zc_product['price']); ?>
-                      </span>
-
-                      <?php if (!empty($zc_product['old_price'])) : ?>
-                        <span class="zc-best-old-price">
-                          <?php echo esc_html($zc_product['old_price']); ?>
-                        </span>
-                      <?php endif; ?>
+                      <?php echo wp_kses_post($zc_product->get_price_html()); ?>
                     </div>
 
                     <a href="<?php echo esc_url($zc_product_url); ?>" class="zc-best-cart" aria-label="View product">
@@ -128,9 +109,20 @@ $zc_shop_url = home_url('/shop/');
                   </div>
 
                   <div class="zc-best-rating">
-                    <span class="zc-best-stars">★★★★★</span>
+                    <span class="zc-best-stars">
+                      <?php
+                      if ($zc_rating > 0) {
+                        for ($i = 1; $i <= 5; $i++) {
+                          echo $i <= round($zc_rating) ? '★' : '☆';
+                        }
+                      } else {
+                        echo '★★★★★';
+                      }
+                      ?>
+                    </span>
+
                     <span class="zc-best-review-count">
-                      (<?php echo esc_html($zc_product['reviews']); ?>)
+                      (<?php echo esc_html($zc_review_count); ?>)
                     </span>
                   </div>
                 </div>
@@ -167,25 +159,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
   if (!originalCount) return;
 
-  originalSlides.forEach(function (slide) {
-    const clone = slide.cloneNode(true);
-    clone.classList.add('is-clone');
-    track.appendChild(clone);
-  });
-
-  originalSlides.slice().reverse().forEach(function (slide) {
-    const clone = slide.cloneNode(true);
-    clone.classList.add('is-clone');
-    track.insertBefore(clone, track.firstChild);
-  });
-
   let slides = Array.from(track.children);
-  let currentIndex = originalCount;
+  let currentIndex = 0;
   let slideWidth = 0;
   let gap = 18;
   let perView = 5;
   let autoplay = null;
   let isMoving = false;
+  let isInfinite = false;
 
   function getPerView() {
     const width = window.innerWidth;
@@ -197,11 +178,58 @@ document.addEventListener('DOMContentLoaded', function () {
     return 5;
   }
 
+  function clearClones() {
+    track.querySelectorAll('.is-clone').forEach(function (clone) {
+      clone.remove();
+    });
+
+    slides = Array.from(track.children);
+  }
+
+  function buildClones() {
+    clearClones();
+
+    originalSlides.forEach(function (slide) {
+      const clone = slide.cloneNode(true);
+      clone.classList.add('is-clone');
+      track.appendChild(clone);
+    });
+
+    originalSlides.slice().reverse().forEach(function (slide) {
+      const clone = slide.cloneNode(true);
+      clone.classList.add('is-clone');
+      track.insertBefore(clone, track.firstChild);
+    });
+
+    slides = Array.from(track.children);
+    currentIndex = originalCount;
+  }
+
   function setSizes() {
     perView = getPerView();
     gap = window.innerWidth <= 768 ? 16 : 18;
 
+    isInfinite = originalCount > perView;
+
+    if (isInfinite) {
+      if (!track.querySelector('.is-clone')) {
+        buildClones();
+      }
+
+      prevBtn.style.display = 'flex';
+      nextBtn.style.display = 'flex';
+    } else {
+      clearClones();
+      currentIndex = 0;
+
+      prevBtn.style.display = 'none';
+      nextBtn.style.display = 'none';
+    }
+
+    slides = Array.from(track.children);
+
     const viewportWidth = viewport.clientWidth;
+
     slideWidth = (viewportWidth - gap * (perView - 1)) / perView;
 
     slides.forEach(function (slide) {
@@ -210,6 +238,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     track.style.gap = gap + 'px';
     moveToIndex(currentIndex, false);
+
+    if (isInfinite) {
+      startAutoplay();
+    } else {
+      stopAutoplay();
+    }
   }
 
   function moveToIndex(index, animate = true) {
@@ -220,7 +254,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function goNext() {
-    if (isMoving) return;
+    if (!isInfinite || isMoving) return;
 
     isMoving = true;
     currentIndex++;
@@ -228,7 +262,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function goPrev() {
-    if (isMoving) return;
+    if (!isInfinite || isMoving) return;
 
     isMoving = true;
     currentIndex--;
@@ -236,6 +270,8 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   track.addEventListener('transitionend', function () {
+    if (!isInfinite) return;
+
     isMoving = false;
 
     if (currentIndex >= originalCount * 2) {
@@ -251,6 +287,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
   function startAutoplay() {
     stopAutoplay();
+
+    if (!isInfinite) return;
 
     autoplay = setInterval(function () {
       goNext();
@@ -278,12 +316,10 @@ document.addEventListener('DOMContentLoaded', function () {
   carousel.addEventListener('mouseleave', startAutoplay);
 
   window.addEventListener('resize', function () {
-    slides = Array.from(track.children);
     setSizes();
   });
 
   setSizes();
-  startAutoplay();
 });
 </script>
 
@@ -379,7 +415,8 @@ document.addEventListener('DOMContentLoaded', function () {
   overflow: hidden;
 }
 
-.zc-best-image {
+.zc-best-image,
+.zc-best-image-wrap img {
   width: 100%;
   height: 100%;
   object-fit: contain;
@@ -387,7 +424,8 @@ document.addEventListener('DOMContentLoaded', function () {
   transition: 0.25s ease;
 }
 
-.zc-best-card:hover .zc-best-image {
+.zc-best-card:hover .zc-best-image,
+.zc-best-card:hover .zc-best-image-wrap img {
   transform: scale(1.04);
 }
 
@@ -409,6 +447,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
 .zc-best-badge--new {
   background: #111111;
+}
+
+.zc-best-badge--sale {
+  background: #ff5b1a;
 }
 
 .zc-best-info {
@@ -443,6 +485,22 @@ document.addEventListener('DOMContentLoaded', function () {
   align-items: center;
   gap: 7px;
   flex-wrap: wrap;
+  color: #ff5b1a;
+  font-size: 14px;
+  line-height: 1;
+  font-weight: 950;
+}
+
+.zc-best-price-wrap del {
+  color: #999999;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: line-through;
+}
+
+.zc-best-price-wrap ins {
+  color: #ff5b1a;
+  text-decoration: none;
 }
 
 .zc-best-price {
@@ -507,7 +565,6 @@ document.addEventListener('DOMContentLoaded', function () {
   font-weight: 700;
 }
 
-/* Carousel buttons */
 .zc-best-carousel__btn {
   position: absolute;
   top: 50%;
@@ -563,14 +620,12 @@ document.addEventListener('DOMContentLoaded', function () {
   margin-right: 3px;
 }
 
-/* 1024 */
 @media screen and (max-width: 1024px) {
   .zc-best-image-wrap {
     height: 200px;
   }
 }
 
-/* 768 */
 @media screen and (max-width: 768px) {
   .zc-best-section {
     padding: 15px 0 55px;
@@ -618,7 +673,6 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 }
 
-/* 480 */
 @media screen and (max-width: 480px) {
   .zc-best-image-wrap {
     height: 210px;
