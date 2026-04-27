@@ -25,60 +25,6 @@ defined('ABSPATH') || exit;
           Explore our curated collections of custom prints made for every style, mood, and moment.
         </p>
 
-        <div class="zc-collections-hero__features">
-
-          <div class="zc-collections-hero__feature">
-            <span class="zc-collections-hero__icon">
-              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M12 3L19 7V12C19 16.5 16.2 20.2 12 21C7.8 20.2 5 16.5 5 12V7L12 3Z" stroke="currentColor" stroke-width="1.8"/>
-                <path d="M9.5 12L11.2 13.7L14.8 10.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </span>
-            <span class="zc-collections-hero__feature-text">
-              Premium Quality<br>Prints
-            </span>
-          </div>
-
-          <div class="zc-collections-hero__feature zc-collections-hero__feature--border">
-            <span class="zc-collections-hero__icon">
-              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M12 20C16.4 20 20 16.4 20 12C20 7.6 16.4 4 12 4C7.6 4 4 7.6 4 12C4 16.4 7.6 20 12 20Z" stroke="currentColor" stroke-width="1.8"/>
-                <path d="M8 13C10.2 13 11.5 10.2 12.4 8.3C13 7 13.5 6 14.4 6C15.8 6 16.3 8 16.6 9.5C17 11.2 17.7 13 19 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-              </svg>
-            </span>
-            <span class="zc-collections-hero__feature-text">
-              Made on Demand<br>Just for you
-            </span>
-          </div>
-
-          <div class="zc-collections-hero__feature zc-collections-hero__feature--border">
-            <span class="zc-collections-hero__icon">
-              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M3 7H14V14H3V7Z" stroke="currentColor" stroke-width="1.8"/>
-                <path d="M14 10H18L21 13V14H14V10Z" stroke="currentColor" stroke-width="1.8"/>
-                <path d="M7 18C8.1 18 9 17.1 9 16C9 14.9 8.1 14 7 14C5.9 14 5 14.9 5 16C5 17.1 5.9 18 7 18Z" stroke="currentColor" stroke-width="1.8"/>
-                <path d="M17 18C18.1 18 19 17.1 19 16C19 14.9 18.1 14 17 14C15.9 14 15 14.9 15 16C15 17.1 15.9 18 17 18Z" stroke="currentColor" stroke-width="1.8"/>
-              </svg>
-            </span>
-            <span class="zc-collections-hero__feature-text">
-              Fast & Reliable<br>Shipping
-            </span>
-          </div>
-
-          <div class="zc-collections-hero__feature zc-collections-hero__feature--border">
-            <span class="zc-collections-hero__icon">
-              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z" stroke="currentColor" stroke-width="1.8"/>
-                <path d="M8 12H16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                <path d="M12 8V16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-              </svg>
-            </span>
-            <span class="zc-collections-hero__feature-text">
-              No Minimum<br>Order
-            </span>
-          </div>
-
-        </div>
       </div>
     </div>
 
