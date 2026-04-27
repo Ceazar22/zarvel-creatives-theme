@@ -6,7 +6,7 @@ defined('ABSPATH') || exit;
  */
 function zarvel_get_current_path() {
     $request_uri = isset($_SERVER['REQUEST_URI'])
-        ? sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI']))
+        ? wp_unslash($_SERVER['REQUEST_URI'])
         : '';
 
     $request_path = trim((string) wp_parse_url($request_uri, PHP_URL_PATH), '/');
@@ -31,10 +31,14 @@ function zarvel_custom_template_router($template) {
     $single_product_template   = get_template_directory() . '/pages/single-product.php';
     $product_category_template = get_template_directory() . '/pages/product-category.php';
     $customize_template        = get_template_directory() . '/pages/customize.php';
-    $about_template = get_template_directory() . '/pages/about-us.php';
+    $about_template            = get_template_directory() . '/pages/about-us.php';
 
     $current_path = zarvel_get_current_path();
 
+    /**
+     * Theme-only Customize page.
+     * URL: /customize/
+     */
     if ($current_path === 'customize' && file_exists($customize_template)) {
         global $wp_query;
 
@@ -47,10 +51,32 @@ function zarvel_custom_template_router($template) {
         return $customize_template;
     }
 
+    /**
+     * Theme-only About page.
+     * URL: /about-us/
+     */
+    if ($current_path === 'about-us' && file_exists($about_template)) {
+        global $wp_query;
+
+        if ($wp_query) {
+            $wp_query->is_404 = false;
+        }
+
+        status_header(200);
+
+        return $about_template;
+    }
+
+    /**
+     * Homepage.
+     */
     if (is_front_page() && file_exists($front_page_template)) {
         return $front_page_template;
     }
 
+    /**
+     * Single WooCommerce product page.
+     */
     if (
         ((function_exists('is_product') && is_product()) || is_singular('product')) &&
         file_exists($single_product_template)
@@ -58,6 +84,9 @@ function zarvel_custom_template_router($template) {
         return $single_product_template;
     }
 
+    /**
+     * Single product category page.
+     */
     if (
         function_exists('is_product_category') &&
         is_product_category() &&
