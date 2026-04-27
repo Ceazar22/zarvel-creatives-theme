@@ -1,5 +1,4 @@
 <?php
-<?php
 defined('ABSPATH') || exit;
 
 /**
@@ -44,18 +43,9 @@ function zarvel_custom_template_router($template) {
     $front_page_template       = get_template_directory() . '/pages/front-page.php';
     $single_product_template   = get_template_directory() . '/pages/single-product.php';
     $product_category_template = get_template_directory() . '/pages/product-category.php';
-    $shop_template             = get_template_directory() . '/pages/shop.php';
 
     if (is_front_page() && file_exists($front_page_template)) {
         return $front_page_template;
-    }
-
-    if (
-        function_exists('is_shop') &&
-        is_shop() &&
-        file_exists($shop_template)
-    ) {
-        return $shop_template;
     }
 
     if (
