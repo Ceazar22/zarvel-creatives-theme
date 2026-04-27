@@ -470,7 +470,6 @@ $zc_showing_end = min($zc_offset + $zc_per_page, $zc_total_categories);
 }
 
 .zc-collection-card__image-wrap {
-  height: 210px;
   padding: 14px;
   background: #f7f7f7;
   display: flex;
@@ -583,9 +582,7 @@ $zc_showing_end = min($zc_offset + $zc_per_page, $zc_total_categories);
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .zc-collection-card__image-wrap {
-    height: 200px;
-  }
+
 }
 
 @media screen and (max-width: 768px) {
@@ -632,8 +629,5 @@ $zc_showing_end = min($zc_offset + $zc_per_page, $zc_total_categories);
     grid-template-columns: 1fr;
   }
 
-  .zc-collection-card__image-wrap {
-    height: 220px;
-  }
 }
 </style>
