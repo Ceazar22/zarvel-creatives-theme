@@ -123,35 +123,6 @@ defined('ABSPATH') || exit;
               </div>
             </div>
 
-            <div class="zc-form-row">
-              <div class="zc-form-field">
-                <label for="zc_color">Preferred Color</label>
-                <select id="zc_color" name="preferred_color">
-                  <option value="">Select color</option>
-                  <option value="Black">Black</option>
-                  <option value="White">White</option>
-                  <option value="Red">Red</option>
-                  <option value="Blue">Blue</option>
-                  <option value="Gray">Gray</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-
-              <div class="zc-form-field">
-                <label for="zc_size">Preferred Size</label>
-                <select id="zc_size" name="preferred_size">
-                  <option value="">Select size</option>
-                  <option value="XS">XS</option>
-                  <option value="S">S</option>
-                  <option value="M">M</option>
-                  <option value="L">L</option>
-                  <option value="XL">XL</option>
-                  <option value="2XL">2XL</option>
-                  <option value="3XL">3XL</option>
-                  <option value="Not Applicable">Not Applicable</option>
-                </select>
-              </div>
-            </div>
 
           </div>
 
@@ -183,10 +154,6 @@ defined('ABSPATH') || exit;
               <textarea id="zc_design_notes" name="design_notes" rows="7" placeholder="Tell us about your design idea, placement, colors, text, style, or anything important..." required></textarea>
             </div>
 
-            <div class="zc-form-field">
-              <label for="zc_deadline">Deadline Optional</label>
-              <input id="zc_deadline" type="date" name="deadline">
-            </div>
 
           </div>
 
