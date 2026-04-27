@@ -34,7 +34,6 @@ add_action('wp_enqueue_scripts', 'zarvel_creative_scripts');
 
 /**
  * Custom template router
- * This allows page templates to live inside /pages/
  */
 function zarvel_custom_template_router($template) {
     if (is_admin()) {
