@@ -5,85 +5,9 @@ defined('ABSPATH') || exit;
 <section class="zc-customize-builder">
   <div class="zc-customize-builder__container">
 
-    <div class="zc-customize-step">
-      <h2 class="zc-customize-step__title">
-        <span>1.</span> Choose Your Product Type
-      </h2>
-
-      <div class="zc-product-type-grid">
-
-        <label class="zc-product-type-card">
-          <input type="radio" name="zc_product_type_card" value="T-Shirts" checked>
-          <span class="zc-product-type-card__inner">
-            <span class="zc-product-type-card__icon">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M9 4l3 2 3-2 4 2.5-2 4-2-1v10H9v-10l-2 1-2-4L9 4z"></path>
-              </svg>
-            </span>
-            <strong>T-Shirts</strong>
-          </span>
-        </label>
-
-        <label class="zc-product-type-card">
-          <input type="radio" name="zc_product_type_card" value="Hoodies">
-          <span class="zc-product-type-card__inner">
-            <span class="zc-product-type-card__icon">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M8 8V6a4 4 0 0 1 8 0v2"></path>
-                <path d="M7 8h10l2 4v8H5v-8l2-4z"></path>
-                <path d="M9 13v7"></path>
-                <path d="M15 13v7"></path>
-              </svg>
-            </span>
-            <strong>Hoodies</strong>
-          </span>
-        </label>
-
-        <label class="zc-product-type-card">
-          <input type="radio" name="zc_product_type_card" value="Mugs">
-          <span class="zc-product-type-card__inner">
-            <span class="zc-product-type-card__icon">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M5 7h11v9a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4V7z"></path>
-                <path d="M16 9h2a3 3 0 0 1 0 6h-2"></path>
-              </svg>
-            </span>
-            <strong>Mugs</strong>
-          </span>
-        </label>
-
-        <label class="zc-product-type-card">
-          <input type="radio" name="zc_product_type_card" value="Tote Bags">
-          <span class="zc-product-type-card__inner">
-            <span class="zc-product-type-card__icon">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M6 9h12l1 11H5L6 9z"></path>
-                <path d="M9 9V7a3 3 0 0 1 6 0v2"></path>
-              </svg>
-            </span>
-            <strong>Tote Bags</strong>
-          </span>
-        </label>
-
-        <label class="zc-product-type-card">
-          <input type="radio" name="zc_product_type_card" value="Phone Cases">
-          <span class="zc-product-type-card__inner">
-            <span class="zc-product-type-card__icon">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <rect x="7" y="3" width="10" height="18" rx="2"></rect>
-                <path d="M11 18h2"></path>
-              </svg>
-            </span>
-            <strong>Phone Cases</strong>
-          </span>
-        </label>
-
-      </div>
-    </div>
-
     <div class="zc-customize-step zc-customize-step--form">
       <h2 class="zc-customize-step__title">
-        <span>2.</span> Submit Your Design Request
+        Submit Your Design Request
       </h2>
 
       <?php
@@ -159,12 +83,44 @@ defined('ABSPATH') || exit;
               <label for="zc_product_type">Product Type <span>*</span></label>
               <select id="zc_product_type" name="product_type" required>
                 <option value="">Select product type</option>
-                <option value="T-Shirts" selected>T-Shirts</option>
+                <option value="T-Shirts">T-Shirts</option>
                 <option value="Hoodies">Hoodies</option>
                 <option value="Mugs">Mugs</option>
                 <option value="Tote Bags">Tote Bags</option>
                 <option value="Phone Cases">Phone Cases</option>
+                <option value="Caps">Caps</option>
+                <option value="Other">Other</option>
               </select>
+            </div>
+
+            <div class="zc-form-field">
+              <label>What are we working with? <span>*</span></label>
+
+              <div class="zc-logo-option-grid">
+                <label class="zc-logo-option">
+                  <input type="radio" name="logo_status" value="I already have a logo/design" required>
+                  <span>
+                    <strong>I already have a logo/design</strong>
+                    <small>I’ll upload the file for you to use.</small>
+                  </span>
+                </label>
+
+                <label class="zc-logo-option">
+                  <input type="radio" name="logo_status" value="I need you to create the design" required>
+                  <span>
+                    <strong>I need you to create the design</strong>
+                    <small>I’ll explain the idea and style I want.</small>
+                  </span>
+                </label>
+
+                <label class="zc-logo-option">
+                  <input type="radio" name="logo_status" value="I have an idea but no final file" required>
+                  <span>
+                    <strong>I have an idea, but no final file</strong>
+                    <small>I need help turning the idea into artwork.</small>
+                  </span>
+                </label>
+              </div>
             </div>
 
             <div class="zc-form-row">
@@ -224,7 +180,7 @@ defined('ABSPATH') || exit;
 
             <div class="zc-form-field">
               <label for="zc_design_notes">Design Instructions <span>*</span></label>
-              <textarea id="zc_design_notes" name="design_notes" rows="5" placeholder="Tell us about your design idea, placement, colors, text, style, or anything important..." required></textarea>
+              <textarea id="zc_design_notes" name="design_notes" rows="7" placeholder="Tell us about your design idea, placement, colors, text, style, or anything important..." required></textarea>
             </div>
 
             <div class="zc-form-field">
@@ -254,26 +210,8 @@ defined('ABSPATH') || exit;
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-  const productCards = document.querySelectorAll('input[name="zc_product_type_card"]');
-  const productSelect = document.querySelector('#zc_product_type');
   const fileInput = document.querySelector('#zc_upload_file');
   const fileName = document.querySelector('#zcUploadFileName');
-
-  productCards.forEach(function (card) {
-    card.addEventListener('change', function () {
-      if (!productSelect) return;
-
-      productSelect.value = card.value;
-    });
-  });
-
-  if (productSelect) {
-    productSelect.addEventListener('change', function () {
-      productCards.forEach(function (card) {
-        card.checked = card.value === productSelect.value;
-      });
-    });
-  }
 
   if (fileInput && fileName) {
     fileInput.addEventListener('change', function () {
@@ -303,9 +241,9 @@ document.addEventListener('DOMContentLoaded', function () {
 }
 
 .zc-customize-step__title {
-  margin: 0 0 18px;
+  margin: 0 0 22px;
   color: #111111;
-  font-size: 15px;
+  font-size: 17px;
   line-height: 1;
   font-weight: 950;
   text-align: center;
@@ -315,70 +253,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
 .zc-customize-step__title span {
   color: #111111;
-}
-
-.zc-product-type-grid {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 14px;
-}
-
-.zc-product-type-card {
-  cursor: pointer;
-}
-
-.zc-product-type-card input {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.zc-product-type-card__inner {
-  min-height: 126px;
-  padding: 18px 12px;
-  border: 1px solid #e8e8e8;
-  border-radius: 10px;
-  background: #ffffff;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 13px;
-  transition: 0.2s ease;
-}
-
-.zc-product-type-card__icon {
-  width: 42px;
-  height: 42px;
-  color: #111111;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.zc-product-type-card__icon svg {
-  width: 100%;
-  height: 100%;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.7;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.zc-product-type-card strong {
-  color: #111111;
-  font-size: 13px;
-  line-height: 1;
-  font-weight: 900;
-  text-align: center;
-}
-
-.zc-product-type-card input:checked + .zc-product-type-card__inner,
-.zc-product-type-card__inner:hover {
-  border-color: #ff5b1a;
-  background: #fff6f1;
-  box-shadow: 0 12px 28px rgba(255, 91, 26, 0.08);
 }
 
 .zc-customize-step--form {
@@ -409,9 +283,9 @@ document.addEventListener('DOMContentLoaded', function () {
 }
 
 .zc-design-request-form {
-  padding: 26px;
+  padding: 30px;
   border: 1px solid #e9e9e9;
-  border-radius: 12px;
+  border-radius: 14px;
   background: #ffffff;
 }
 
@@ -433,7 +307,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 .zc-form-field label {
   display: block;
-  margin-bottom: 7px;
+  margin-bottom: 8px;
   color: #111111;
   font-size: 11px;
   line-height: 1;
@@ -477,6 +351,55 @@ document.addEventListener('DOMContentLoaded', function () {
   box-shadow: 0 0 0 3px rgba(255, 91, 26, 0.08);
 }
 
+.zc-logo-option-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.zc-logo-option {
+  cursor: pointer;
+}
+
+.zc-logo-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.zc-logo-option span {
+  min-height: 68px;
+  padding: 14px 15px;
+  border: 1px solid #dddddd;
+  border-radius: 9px;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  transition: 0.2s ease;
+}
+
+.zc-logo-option strong {
+  color: #111111;
+  font-size: 13px;
+  line-height: 1.2;
+  font-weight: 900;
+}
+
+.zc-logo-option small {
+  color: #777777;
+  font-size: 12px;
+  line-height: 1.3;
+  font-weight: 650;
+}
+
+.zc-logo-option input:checked + span,
+.zc-logo-option span:hover {
+  border-color: #ff5b1a;
+  background: #fff6f1;
+  box-shadow: 0 10px 24px rgba(255, 91, 26, 0.08);
+}
+
 .zc-upload-box {
   min-height: 178px;
   padding: 22px;
@@ -505,7 +428,7 @@ document.addEventListener('DOMContentLoaded', function () {
   width: 36px;
   height: 36px;
   margin-bottom: 8px;
-  color: #111111;
+  color: #ff5b1a;
 }
 
 .zc-upload-box__icon svg {
@@ -588,10 +511,6 @@ document.addEventListener('DOMContentLoaded', function () {
 }
 
 @media screen and (max-width: 1024px) {
-  .zc-product-type-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
   .zc-design-request-form__grid {
     grid-template-columns: 1fr;
     gap: 4px;
@@ -607,10 +526,6 @@ document.addEventListener('DOMContentLoaded', function () {
     width: min(100% - 30px, 1120px);
   }
 
-  .zc-product-type-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .zc-design-request-form {
     padding: 20px 16px;
   }
@@ -622,12 +537,8 @@ document.addEventListener('DOMContentLoaded', function () {
 }
 
 @media screen and (max-width: 480px) {
-  .zc-product-type-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .zc-product-type-card__inner {
-    min-height: 110px;
+  .zc-customize-step__title {
+    font-size: 15px;
   }
 }
 </style>
