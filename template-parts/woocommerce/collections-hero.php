@@ -1,8 +1,5 @@
 <?php
 defined('ABSPATH') || exit;
-
-$zc_title = 'COLLECTIONS';
-$zc_description = 'Explore our curated collections of custom prints made for every style, mood, and moment.';
 ?>
 
 <section class="zc-collections-hero">
@@ -16,18 +13,16 @@ $zc_description = 'Explore our curated collections of custom prints made for eve
 
     <div class="zc-collections-hero__content">
       <div class="zc-collections-hero__left">
-        <h1 class="zc-collections-hero__title">
-          <?php echo esc_html($zc_title); ?>
-        </h1>
+        <h1 class="zc-collections-hero__title">COLLECTIONS</h1>
 
-        <div class="zc-collections-hero__underline">
-          <svg viewBox="0 0 180 18" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <div class="zc-collections-hero__underline" aria-hidden="true">
+          <svg viewBox="0 0 180 18" xmlns="http://www.w3.org/2000/svg">
             <path d="M3 12C20 6 33 15 49 10C63 6 78 12 93 8C110 4 121 10 137 7C151 4 163 8 177 5" />
           </svg>
         </div>
 
         <p class="zc-collections-hero__desc">
-          <?php echo esc_html($zc_description); ?>
+          Explore our curated collections of custom prints made for every style, mood, and moment.
         </p>
 
         <div class="zc-collections-hero__features">
@@ -39,7 +34,9 @@ $zc_description = 'Explore our curated collections of custom prints made for eve
                 <path d="M9.5 12L11.2 13.7L14.8 10.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
             </span>
-            <span class="zc-collections-hero__feature-text">Premium Quality<br>Prints</span>
+            <span class="zc-collections-hero__feature-text">
+              Premium Quality<br>Prints
+            </span>
           </div>
 
           <div class="zc-collections-hero__feature zc-collections-hero__feature--border">
@@ -49,7 +46,9 @@ $zc_description = 'Explore our curated collections of custom prints made for eve
                 <path d="M8 13C10.2 13 11.5 10.2 12.4 8.3C13 7 13.5 6 14.4 6C15.8 6 16.3 8 16.6 9.5C17 11.2 17.7 13 19 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
               </svg>
             </span>
-            <span class="zc-collections-hero__feature-text">Made on Demand<br>Just for you</span>
+            <span class="zc-collections-hero__feature-text">
+              Made on Demand<br>Just for you
+            </span>
           </div>
 
           <div class="zc-collections-hero__feature zc-collections-hero__feature--border">
@@ -61,7 +60,9 @@ $zc_description = 'Explore our curated collections of custom prints made for eve
                 <path d="M17 18C18.1 18 19 17.1 19 16C19 14.9 18.1 14 17 14C15.9 14 15 14.9 15 16C15 17.1 15.9 18 17 18Z" stroke="currentColor" stroke-width="1.8"/>
               </svg>
             </span>
-            <span class="zc-collections-hero__feature-text">Fast &amp; Reliable<br>Shipping</span>
+            <span class="zc-collections-hero__feature-text">
+              Fast & Reliable<br>Shipping
+            </span>
           </div>
 
           <div class="zc-collections-hero__feature zc-collections-hero__feature--border">
@@ -72,7 +73,9 @@ $zc_description = 'Explore our curated collections of custom prints made for eve
                 <path d="M12 8V16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
               </svg>
             </span>
-            <span class="zc-collections-hero__feature-text">No Minimum<br>Order</span>
+            <span class="zc-collections-hero__feature-text">
+              No Minimum<br>Order
+            </span>
           </div>
 
         </div>
@@ -85,10 +88,10 @@ $zc_description = 'Explore our curated collections of custom prints made for eve
 <style>
 .zc-collections-hero {
   width: 100%;
-  padding: 38px 0 40px;
-  background: linear-gradient(90deg, #ffffff 0%, #fdf8f5 100%);
-  border-top: 1px solid #f0ece8;
-  border-bottom: 1px solid #f0ece8;
+  padding: 42px 0 44px;
+  background: linear-gradient(90deg, #ffffff 0%, #fdf7f4 100%);
+  border-top: 1px solid #efebe7;
+  border-bottom: 1px solid #efebe7;
 }
 
 .zc-collections-hero__container {
@@ -100,15 +103,15 @@ $zc_description = 'Explore our curated collections of custom prints made for eve
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 22px;
+  margin-bottom: 24px;
   font-size: 12px;
   line-height: 1.2;
   font-weight: 700;
-  color: #8a8a8a;
+  color: #8e8e8e;
 }
 
 .zc-collections-hero__breadcrumb a {
-  color: #8a8a8a;
+  color: #8e8e8e;
   text-decoration: none;
 }
 
@@ -121,6 +124,10 @@ $zc_description = 'Explore our curated collections of custom prints made for eve
   font-weight: 800;
 }
 
+.zc-collections-hero__content {
+  display: block;
+}
+
 .zc-collections-hero__left {
   width: 100%;
   max-width: 760px;
@@ -129,8 +136,8 @@ $zc_description = 'Explore our curated collections of custom prints made for eve
 .zc-collections-hero__title {
   margin: 0;
   color: #111111;
-  font-size: clamp(42px, 7vw, 78px);
-  line-height: .92;
+  font-size: clamp(44px, 6vw, 78px);
+  line-height: 0.92;
   font-weight: 900;
   letter-spacing: -1.8px;
   text-transform: uppercase;
@@ -157,10 +164,10 @@ $zc_description = 'Explore our curated collections of custom prints made for eve
 
 .zc-collections-hero__desc {
   max-width: 500px;
-  margin: 0 0 26px;
+  margin: 0 0 28px;
   color: #444444;
   font-size: 17px;
-  line-height: 1.6;
+  line-height: 1.65;
   font-weight: 600;
 }
 
@@ -175,14 +182,14 @@ $zc_description = 'Explore our curated collections of custom prints made for eve
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 0 22px 0 0;
   min-height: 48px;
+  padding-right: 24px;
 }
 
 .zc-collections-hero__feature--border {
-  margin-left: 22px;
-  padding-left: 22px;
-  border-left: 1px solid #e7dfd8;
+  margin-left: 24px;
+  padding-left: 24px;
+  border-left: 1px solid #e8ddd5;
 }
 
 .zc-collections-hero__icon {
@@ -208,13 +215,45 @@ $zc_description = 'Explore our curated collections of custom prints made for eve
   font-weight: 700;
 }
 
+@media screen and (max-width: 1024px) {
+  .zc-collections-hero__features {
+    gap: 18px 0;
+  }
+
+  .zc-collections-hero__feature,
+  .zc-collections-hero__feature--border {
+    margin-left: 0;
+    padding-left: 0;
+    border-left: 0;
+    width: 50%;
+    padding-right: 16px;
+  }
+}
+
 @media screen and (max-width: 768px) {
   .zc-collections-hero {
-    padding: 30px 0 34px;
+    padding: 34px 0 36px;
   }
 
   .zc-collections-hero__container {
     width: min(100% - 30px, 1280px);
+  }
+
+  .zc-collections-hero__breadcrumb {
+    margin-bottom: 18px;
+  }
+
+  .zc-collections-hero__title {
+    font-size: 44px;
+  }
+
+  .zc-collections-hero__underline {
+    width: 130px;
+  }
+
+  .zc-collections-hero__desc {
+    font-size: 15px;
+    margin-bottom: 24px;
   }
 
   .zc-collections-hero__features {
@@ -225,19 +264,18 @@ $zc_description = 'Explore our curated collections of custom prints made for eve
 
   .zc-collections-hero__feature,
   .zc-collections-hero__feature--border {
-    margin-left: 0;
-    padding: 0;
-    border-left: 0;
+    width: 100%;
+    padding-right: 0;
   }
 }
 
 @media screen and (max-width: 480px) {
-  .zc-collections-hero__features {
-    grid-template-columns: 1fr;
-  }
-
   .zc-collections-hero__title {
     font-size: 38px;
+  }
+
+  .zc-collections-hero__features {
+    grid-template-columns: 1fr;
   }
 }
 </style>
