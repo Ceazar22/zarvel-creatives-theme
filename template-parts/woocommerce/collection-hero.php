@@ -50,6 +50,7 @@ $zc_shop_url = home_url('/shop/');
                 <path d="M9 12l2 2 4-5"></path>
               </svg>
             </span>
+
             <span class="zc-collection-benefit__text">
               Premium Quality<br>Prints
             </span>
@@ -62,6 +63,7 @@ $zc_shop_url = home_url('/shop/');
                 <path d="M8 12h8"></path>
               </svg>
             </span>
+
             <span class="zc-collection-benefit__text">
               Made on Demand<br>Just for You
             </span>
@@ -76,6 +78,7 @@ $zc_shop_url = home_url('/shop/');
                 <circle cx="18" cy="18" r="2"></circle>
               </svg>
             </span>
+
             <span class="zc-collection-benefit__text">
               Fast & Reliable<br>Shipping
             </span>
@@ -84,11 +87,12 @@ $zc_shop_url = home_url('/shop/');
           <div class="zc-collection-benefit">
             <span class="zc-collection-benefit__icon">
               <svg viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="12" r="9"></circle>
                 <path d="M5 12h14"></path>
                 <path d="M12 5v14"></path>
-                <circle cx="12" cy="12" r="9"></circle>
               </svg>
             </span>
+
             <span class="zc-collection-benefit__text">
               No Minimum<br>Order
             </span>
@@ -104,19 +108,20 @@ $zc_shop_url = home_url('/shop/');
 
 <style>
 .zc-collection-hero {
-  padding: 26px 0 36px;
-  background: #ffffff;
+  width: 100%;
+  padding: 34px 0 44px;
+  background:
+    radial-gradient(circle at 88% 20%, rgba(255, 91, 26, 0.13), transparent 34%),
+    radial-gradient(circle at 100% 70%, rgba(255, 91, 26, 0.08), transparent 30%),
+    linear-gradient(135deg, #ffffff 0%, #fff8f4 58%, #fbede6 100%);
+  border-top: 1px solid #eeeeee;
+  border-bottom: 1px solid #eeeeee;
+  overflow: hidden;
 }
 
 .zc-collection-hero__container {
   width: min(100% - 40px, 1280px);
   margin: 0 auto;
-  padding: 24px 30px 34px;
-  border-radius: 16px;
-  background:
-    radial-gradient(circle at 95% 20%, rgba(255, 91, 26, 0.08), transparent 28%),
-    linear-gradient(135deg, #ffffff 0%, #fbf7f3 100%);
-  border: 1px solid #eeeeee;
 }
 
 .zc-collection-hero__breadcrumb {
@@ -145,23 +150,23 @@ $zc_shop_url = home_url('/shop/');
 
 .zc-collection-hero__breadcrumb strong {
   color: #111111;
-  font-weight: 800;
+  font-weight: 850;
 }
 
 .zc-collection-hero__content {
+  min-height: 260px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
 }
 
 .zc-collection-hero__text {
-  max-width: 620px;
+  max-width: 680px;
 }
 
 .zc-collection-hero__title {
   margin: 0;
   color: #111111;
-  font-size: clamp(48px, 6vw, 86px);
+  font-size: clamp(54px, 7vw, 96px);
   line-height: 0.88;
   font-weight: 950;
   text-transform: uppercase;
@@ -171,26 +176,43 @@ $zc_shop_url = home_url('/shop/');
 .zc-collection-hero__underline {
   width: 150px;
   height: 14px;
-  margin: 14px 0 18px;
+  margin: 16px 0 20px;
   background: #ff5b1a;
   border-radius: 999px;
   transform: rotate(-3deg);
-  clip-path: polygon(0 35%, 10% 20%, 23% 40%, 36% 20%, 50% 35%, 65% 18%, 80% 38%, 100% 22%, 96% 68%, 80% 82%, 66% 62%, 48% 82%, 35% 66%, 19% 84%, 7% 62%, 0 76%);
+  clip-path: polygon(
+    0 35%,
+    10% 20%,
+    23% 40%,
+    36% 20%,
+    50% 35%,
+    65% 18%,
+    80% 38%,
+    100% 22%,
+    96% 68%,
+    80% 82%,
+    66% 62%,
+    48% 82%,
+    35% 66%,
+    19% 84%,
+    7% 62%,
+    0 76%
+  );
 }
 
 .zc-collection-hero__description {
-  max-width: 460px;
-  margin: 0 0 34px;
+  max-width: 520px;
+  margin: 0 0 38px;
   color: #222222;
-  font-size: 15px;
+  font-size: 16px;
   line-height: 1.55;
-  font-weight: 650;
+  font-weight: 700;
 }
 
 .zc-collection-hero__benefits {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, auto));
-  gap: 28px;
+  gap: 32px;
   align-items: center;
 }
 
@@ -201,15 +223,16 @@ $zc_shop_url = home_url('/shop/');
 }
 
 .zc-collection-benefit__icon {
-  width: 34px;
-  height: 34px;
-  min-width: 34px;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
   border-radius: 50%;
   background: #ffffff;
   border: 1px solid #eeeeee;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.04);
 }
 
 .zc-collection-benefit__icon svg {
@@ -230,7 +253,7 @@ $zc_shop_url = home_url('/shop/');
 }
 
 .zc-collection-products {
-  padding: 10px 0 80px;
+  padding: 40px 0 80px;
   background: #ffffff;
 }
 
@@ -240,6 +263,10 @@ $zc_shop_url = home_url('/shop/');
 }
 
 @media screen and (max-width: 1024px) {
+  .zc-collection-hero__content {
+    min-height: 230px;
+  }
+
   .zc-collection-hero__benefits {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 18px;
@@ -248,12 +275,11 @@ $zc_shop_url = home_url('/shop/');
 
 @media screen and (max-width: 768px) {
   .zc-collection-hero {
-    padding: 18px 0 28px;
+    padding: 28px 0 36px;
   }
 
   .zc-collection-hero__container {
     width: min(100% - 30px, 1280px);
-    padding: 22px 18px 28px;
   }
 
   .zc-collection-hero__breadcrumb {
@@ -261,13 +287,18 @@ $zc_shop_url = home_url('/shop/');
     margin-bottom: 24px;
   }
 
+  .zc-collection-hero__content {
+    min-height: auto;
+  }
+
   .zc-collection-hero__title {
-    font-size: 46px;
+    font-size: 48px;
     letter-spacing: -1px;
   }
 
   .zc-collection-hero__description {
     font-size: 14px;
+    margin-bottom: 30px;
   }
 
   .zc-collection-hero__benefits {
@@ -281,7 +312,7 @@ $zc_shop_url = home_url('/shop/');
 
 @media screen and (max-width: 480px) {
   .zc-collection-hero__title {
-    font-size: 38px;
+    font-size: 40px;
   }
 
   .zc-collection-hero__benefits {
