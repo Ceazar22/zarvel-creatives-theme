@@ -41,64 +41,7 @@ $zc_shop_url = home_url('/shop/');
           <?php echo esc_html($zc_description); ?>
         </p>
 
-        <div class="zc-collection-hero__benefits">
 
-          <div class="zc-collection-benefit">
-            <span class="zc-collection-benefit__icon">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 2l7 4v6c0 5-3 9-7 10-4-1-7-5-7-10V6l7-4z"></path>
-                <path d="M9 12l2 2 4-5"></path>
-              </svg>
-            </span>
-
-            <span class="zc-collection-benefit__text">
-              Premium Quality<br>Prints
-            </span>
-          </div>
-
-          <div class="zc-collection-benefit">
-            <span class="zc-collection-benefit__icon">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 3l8 4v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7l8-4z"></path>
-                <path d="M8 12h8"></path>
-              </svg>
-            </span>
-
-            <span class="zc-collection-benefit__text">
-              Made on Demand<br>Just for You
-            </span>
-          </div>
-
-          <div class="zc-collection-benefit">
-            <span class="zc-collection-benefit__icon">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M3 7h11v9H3z"></path>
-                <path d="M14 10h4l3 3v3h-7z"></path>
-                <circle cx="7" cy="18" r="2"></circle>
-                <circle cx="18" cy="18" r="2"></circle>
-              </svg>
-            </span>
-
-            <span class="zc-collection-benefit__text">
-              Fast & Reliable<br>Shipping
-            </span>
-          </div>
-
-          <div class="zc-collection-benefit">
-            <span class="zc-collection-benefit__icon">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <circle cx="12" cy="12" r="9"></circle>
-                <path d="M5 12h14"></path>
-                <path d="M12 5v14"></path>
-              </svg>
-            </span>
-
-            <span class="zc-collection-benefit__text">
-              No Minimum<br>Order
-            </span>
-          </div>
-
-        </div>
       </div>
 
     </div>
