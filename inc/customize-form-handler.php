@@ -40,7 +40,6 @@ function zarvel_handle_customize_form() {
 
     /**
      * Basic rate limit by IP.
-     * Helps stop repeated spam submissions.
      */
     $user_ip = isset($_SERVER['REMOTE_ADDR'])
         ? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR']))
@@ -53,17 +52,66 @@ function zarvel_handle_customize_form() {
         exit;
     }
 
-    set_transient($rate_limit_key, true, 60); // 1 submit per 60 seconds per IP
+    set_transient($rate_limit_key, true, 60);
 
     /**
-     * Sanitize fields.
+     * Sanitize normal fields.
      */
     $full_name    = isset($_POST['full_name']) ? sanitize_text_field(wp_unslash($_POST['full_name'])) : '';
     $email        = isset($_POST['email']) ? sanitize_email(wp_unslash($_POST['email'])) : '';
     $phone        = isset($_POST['phone']) ? sanitize_text_field(wp_unslash($_POST['phone'])) : '';
-    $product_type = isset($_POST['product_type']) ? sanitize_text_field(wp_unslash($_POST['product_type'])) : '';
-    $logo_status  = isset($_POST['logo_status']) ? sanitize_text_field(wp_unslash($_POST['logo_status'])) : '';
     $design_notes = isset($_POST['design_notes']) ? sanitize_textarea_field(wp_unslash($_POST['design_notes'])) : '';
+
+    /**
+     * Normalize product type.
+     * This fixes values like:
+     * T-Shirt, T Shirt, Phone Case, Tote Bag, etc.
+     */
+    $raw_product_type = isset($_POST['product_type'])
+        ? sanitize_text_field(wp_unslash($_POST['product_type']))
+        : '';
+
+    $product_type = sanitize_title($raw_product_type);
+
+    $product_aliases = array(
+        'tshirt'      => 't-shirt',
+        't-shirt'     => 't-shirt',
+        't-shirt-'    => 't-shirt',
+        'hoodie'      => 'hoodie',
+        'mug'         => 'mug',
+        'tote'        => 'tote-bag',
+        'tote-bag'    => 'tote-bag',
+        'phonecase'   => 'phone-case',
+        'phone-case'  => 'phone-case',
+    );
+
+    if (isset($product_aliases[$product_type])) {
+        $product_type = $product_aliases[$product_type];
+    }
+
+    /**
+     * Normalize logo/design status.
+     */
+    $raw_logo_status = isset($_POST['logo_status'])
+        ? sanitize_text_field(wp_unslash($_POST['logo_status']))
+        : '';
+
+    $logo_status = sanitize_title($raw_logo_status);
+
+    $logo_status_aliases = array(
+        'has-logo'       => 'has-logo',
+        'has-design'     => 'has-logo',
+        'already-have'   => 'has-logo',
+        'needs-design'   => 'needs-design',
+        'need-design'    => 'needs-design',
+        'design-for-me'  => 'needs-design',
+        'has-idea-only'  => 'has-idea-only',
+        'idea-only'      => 'has-idea-only',
+    );
+
+    if (isset($logo_status_aliases[$logo_status])) {
+        $logo_status = $logo_status_aliases[$logo_status];
+    }
 
     /**
      * Required fields.
@@ -88,8 +136,7 @@ function zarvel_handle_customize_form() {
     }
 
     /**
-     * Allow only your real product options.
-     * Make sure these values match your form <option value=""> values.
+     * Allowed product types.
      */
     $allowed_product_types = array(
         't-shirt',
@@ -105,8 +152,7 @@ function zarvel_handle_customize_form() {
     }
 
     /**
-     * Allow only your real logo/design options.
-     * Make sure these values match your form radio/select values.
+     * Allowed logo/design statuses.
      */
     $allowed_logo_statuses = array(
         'has-logo',
@@ -136,13 +182,8 @@ function zarvel_handle_customize_form() {
         'has-idea-only' => 'Customer has an idea only and needs help turning it into a design.',
     );
 
-    $product_type_label = isset($product_type_labels[$product_type])
-        ? $product_type_labels[$product_type]
-        : $product_type;
-
-    $logo_status_label = isset($logo_status_labels[$logo_status])
-        ? $logo_status_labels[$logo_status]
-        : $logo_status;
+    $product_type_label = $product_type_labels[$product_type];
+    $logo_status_label  = $logo_status_labels[$logo_status];
 
     /**
      * Email setup.
@@ -152,6 +193,7 @@ function zarvel_handle_customize_form() {
 
     $message  = "New custom design request\n";
     $message .= "=========================\n\n";
+
     $message .= "Customer Details\n";
     $message .= "----------------\n";
     $message .= "Full Name: {$full_name}\n";
@@ -211,7 +253,7 @@ function zarvel_handle_customize_form() {
             exit;
         }
 
-        $max_file_size = 20 * 1024 * 1024; // 20MB
+        $max_file_size = 20 * 1024 * 1024;
 
         if (empty($file['size']) || $file['size'] > $max_file_size) {
             wp_safe_redirect(add_query_arg('request_status', 'file_too_large', $redirect_url));
@@ -248,7 +290,6 @@ function zarvel_handle_customize_form() {
 
     /**
      * Delete uploaded file after sending email.
-     * This prevents customer uploads from sitting publicly in /uploads/.
      */
     if (!empty($attachments)) {
         foreach ($attachments as $attachment) {
