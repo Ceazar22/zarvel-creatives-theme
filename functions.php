@@ -1,117 +1,118 @@
 <?php
+defined('ABSPATH') || exit;
+
 /**
- * Handle Customize Design Request Form
+ * Theme setup
  */
-function zarvel_handle_design_request_form() {
-    if (
-        !isset($_POST['zarvel_design_request_submit']) ||
-        !isset($_POST['zarvel_design_request_nonce'])
-    ) {
-        return;
-    }
+function zarvel_creative_setup() {
+    add_theme_support('title-tag');
+    add_theme_support('post-thumbnails');
+    add_theme_support('custom-logo');
+    add_theme_support('woocommerce');
 
-    if (!wp_verify_nonce($_POST['zarvel_design_request_nonce'], 'zarvel_design_request_action')) {
-        wp_safe_redirect(add_query_arg('design_request', 'security_error', wp_get_referer()));
-        exit;
-    }
-
-    /**
-     * Honeypot spam protection
-     * Real users will not fill this field.
-     */
-    if (!empty($_POST['website'])) {
-        wp_safe_redirect(add_query_arg('design_request', 'spam', wp_get_referer()));
-        exit;
-    }
-
-    $name         = isset($_POST['customer_name']) ? sanitize_text_field(wp_unslash($_POST['customer_name'])) : '';
-    $email        = isset($_POST['customer_email']) ? sanitize_email(wp_unslash($_POST['customer_email'])) : '';
-    $phone        = isset($_POST['customer_phone']) ? sanitize_text_field(wp_unslash($_POST['customer_phone'])) : '';
-    $product_type = isset($_POST['product_type']) ? sanitize_text_field(wp_unslash($_POST['product_type'])) : '';
-    $color        = isset($_POST['preferred_color']) ? sanitize_text_field(wp_unslash($_POST['preferred_color'])) : '';
-    $size         = isset($_POST['preferred_size']) ? sanitize_text_field(wp_unslash($_POST['preferred_size'])) : '';
-    $deadline     = isset($_POST['deadline']) ? sanitize_text_field(wp_unslash($_POST['deadline'])) : '';
-    $message      = isset($_POST['design_notes']) ? sanitize_textarea_field(wp_unslash($_POST['design_notes'])) : '';
-
-    if (empty($name) || empty($email) || empty($product_type) || empty($message)) {
-        wp_safe_redirect(add_query_arg('design_request', 'missing_fields', wp_get_referer()));
-        exit;
-    }
-
-    if (!is_email($email)) {
-        wp_safe_redirect(add_query_arg('design_request', 'invalid_email', wp_get_referer()));
-        exit;
-    }
-
-    /**
-     * Replace this with your real Gmail.
-     */
-    $recipient = 'yourgmail@gmail.com';
-
-    $subject = 'New Custom Design Request from ' . $name;
-
-    $body  = "New custom design request:\n\n";
-    $body .= "Name: {$name}\n";
-    $body .= "Email: {$email}\n";
-    $body .= "Phone: {$phone}\n";
-    $body .= "Product Type: {$product_type}\n";
-    $body .= "Preferred Color: {$color}\n";
-    $body .= "Preferred Size: {$size}\n";
-    $body .= "Deadline: {$deadline}\n\n";
-    $body .= "Design Notes:\n{$message}\n\n";
-    $body .= "Sent from: " . home_url('/customize/') . "\n";
-
-    $headers = [
-        'Content-Type: text/plain; charset=UTF-8',
-        'Reply-To: ' . $name . ' <' . $email . '>',
-    ];
-
-    $attachments = [];
-
-    /**
-     * File upload handling
-     */
-    if (!empty($_FILES['design_file']['name'])) {
-        $file = $_FILES['design_file'];
-
-        $allowed_types = [
-            'jpg|jpeg|jpe' => 'image/jpeg',
-            'png'          => 'image/png',
-            'pdf'          => 'application/pdf',
-        ];
-
-        $max_size = 8 * 1024 * 1024; // 8MB
-
-        if (!empty($file['size']) && $file['size'] > $max_size) {
-            wp_safe_redirect(add_query_arg('design_request', 'file_too_large', wp_get_referer()));
-            exit;
-        }
-
-        require_once ABSPATH . 'wp-admin/includes/file.php';
-
-        $upload = wp_handle_upload($file, [
-            'test_form' => false,
-            'mimes'     => $allowed_types,
-        ]);
-
-        if (!empty($upload['error'])) {
-            wp_safe_redirect(add_query_arg('design_request', 'upload_error', wp_get_referer()));
-            exit;
-        }
-
-        if (!empty($upload['file']) && file_exists($upload['file'])) {
-            $attachments[] = $upload['file'];
-        }
-    }
-
-    $sent = wp_mail($recipient, $subject, $body, $headers, $attachments);
-
-    if ($sent) {
-        wp_safe_redirect(add_query_arg('design_request', 'success', wp_get_referer()));
-        exit;
-    }
-
-    wp_safe_redirect(add_query_arg('design_request', 'failed', wp_get_referer()));
-    exit;
+    register_nav_menus([
+        'primary' => 'Primary Menu',
+        'footer'  => 'Footer Menu',
+    ]);
 }
-add_action('template_redirect', 'zarvel_handle_design_request_form');
+add_action('after_setup_theme', 'zarvel_creative_setup');
+
+
+/**
+ * Load main stylesheet
+ */
+function zarvel_creative_scripts() {
+    wp_enqueue_style(
+        'zarvel-style',
+        get_stylesheet_uri(),
+        [],
+        wp_get_theme()->get('Version')
+    );
+}
+add_action('wp_enqueue_scripts', 'zarvel_creative_scripts');
+
+
+/**
+ * Get current URL path.
+ * Example:
+ * https://zarvelcreatives.com/customize/ = customize
+ */
+function zarvel_get_current_path() {
+    $request_uri = isset($_SERVER['REQUEST_URI'])
+        ? wp_unslash($_SERVER['REQUEST_URI'])
+        : '';
+
+    $request_path = trim((string) wp_parse_url($request_uri, PHP_URL_PATH), '/');
+
+    $home_path = trim((string) wp_parse_url(home_url('/'), PHP_URL_PATH), '/');
+
+    if ($home_path && strpos($request_path, $home_path) === 0) {
+        $request_path = trim(substr($request_path, strlen($home_path)), '/');
+    }
+
+    return $request_path;
+}
+
+
+/**
+ * Custom template router
+ */
+function zarvel_custom_template_router($template) {
+    if (is_admin()) {
+        return $template;
+    }
+
+    $front_page_template       = get_template_directory() . '/pages/front-page.php';
+    $single_product_template   = get_template_directory() . '/pages/single-product.php';
+    $product_category_template = get_template_directory() . '/pages/product-category.php';
+    $customize_template        = get_template_directory() . '/pages/customize.php';
+
+    $current_path = zarvel_get_current_path();
+
+    /**
+     * Theme-only Customize page
+     * URL: /customize/
+     */
+    if ($current_path === 'customize' && file_exists($customize_template)) {
+        global $wp_query;
+
+        if ($wp_query) {
+            $wp_query->is_404 = false;
+        }
+
+        status_header(200);
+
+        return $customize_template;
+    }
+
+    /**
+     * Homepage
+     */
+    if (is_front_page() && file_exists($front_page_template)) {
+        return $front_page_template;
+    }
+
+    /**
+     * Single WooCommerce product page
+     */
+    if (
+        ((function_exists('is_product') && is_product()) || is_singular('product')) &&
+        file_exists($single_product_template)
+    ) {
+        return $single_product_template;
+    }
+
+    /**
+     * Single product category page
+     */
+    if (
+        function_exists('is_product_category') &&
+        is_product_category() &&
+        file_exists($product_category_template)
+    ) {
+        return $product_category_template;
+    }
+
+    return $template;
+}
+add_filter('template_include', 'zarvel_custom_template_router', 99);
