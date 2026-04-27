@@ -4,8 +4,9 @@ defined('ABSPATH') || exit;
 get_header();
 ?>
 
-<main class="zc-collections-page">
+<main class="zc-shop-page">
   <?php get_template_part('template-parts/woocommerce/collections-hero'); ?>
+  <?php get_template_part('template-parts/woocommerce/collection-products'); ?>
 </main>
 
 <?php
