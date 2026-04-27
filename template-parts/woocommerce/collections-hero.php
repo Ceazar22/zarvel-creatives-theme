@@ -1,5 +1,8 @@
 <?php
 defined('ABSPATH') || exit;
+
+$zc_title = 'COLLECTIONS';
+$zc_description = 'Explore our curated collections of custom prints made for every style, mood, and moment.';
 ?>
 
 <section class="zc-collections-hero">
@@ -13,7 +16,9 @@ defined('ABSPATH') || exit;
 
     <div class="zc-collections-hero__content">
       <div class="zc-collections-hero__left">
-        <h1 class="zc-collections-hero__title">COLLECTIONS</h1>
+        <h1 class="zc-collections-hero__title">
+          <?php echo esc_html($zc_title); ?>
+        </h1>
 
         <div class="zc-collections-hero__underline">
           <svg viewBox="0 0 180 18" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -22,10 +27,11 @@ defined('ABSPATH') || exit;
         </div>
 
         <p class="zc-collections-hero__desc">
-          Explore our curated collections of custom prints made for every style, mood, and moment.
+          <?php echo esc_html($zc_description); ?>
         </p>
 
         <div class="zc-collections-hero__features">
+
           <div class="zc-collections-hero__feature">
             <span class="zc-collections-hero__icon">
               <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -68,6 +74,7 @@ defined('ABSPATH') || exit;
             </span>
             <span class="zc-collections-hero__feature-text">No Minimum<br>Order</span>
           </div>
+
         </div>
       </div>
     </div>
@@ -112,13 +119,6 @@ defined('ABSPATH') || exit;
 .zc-collections-hero__breadcrumb strong {
   color: #111111;
   font-weight: 800;
-}
-
-.zc-collections-hero__content {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 40px;
 }
 
 .zc-collections-hero__left {
@@ -208,18 +208,6 @@ defined('ABSPATH') || exit;
   font-weight: 700;
 }
 
-@media screen and (max-width: 1024px) {
-  .zc-collections-hero__features {
-    row-gap: 18px;
-  }
-
-  .zc-collections-hero__feature:nth-child(3) {
-    margin-left: 0;
-    padding-left: 0;
-    border-left: 0;
-  }
-}
-
 @media screen and (max-width: 768px) {
   .zc-collections-hero {
     padding: 30px 0 34px;
@@ -227,15 +215,6 @@ defined('ABSPATH') || exit;
 
   .zc-collections-hero__container {
     width: min(100% - 30px, 1280px);
-  }
-
-  .zc-collections-hero__breadcrumb {
-    margin-bottom: 18px;
-  }
-
-  .zc-collections-hero__desc {
-    font-size: 15px;
-    margin-bottom: 22px;
   }
 
   .zc-collections-hero__features {
@@ -259,11 +238,6 @@ defined('ABSPATH') || exit;
 
   .zc-collections-hero__title {
     font-size: 38px;
-    letter-spacing: -1px;
-  }
-
-  .zc-collections-hero__desc {
-    font-size: 14px;
   }
 }
 </style>
