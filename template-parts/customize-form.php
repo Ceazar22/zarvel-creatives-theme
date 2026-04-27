@@ -86,7 +86,55 @@ defined('ABSPATH') || exit;
         <span>2.</span> Submit Your Design Request
       </h2>
 
-      <form class="zc-design-request-form" method="post" enctype="multipart/form-data">
+      <?php
+      $request_status = isset($_GET['request_status'])
+        ? sanitize_text_field(wp_unslash($_GET['request_status']))
+        : '';
+      ?>
+
+      <?php if ($request_status === 'success') : ?>
+        <div class="zc-form-message zc-form-message--success">
+          Your design request was sent successfully. We’ll get back to you soon.
+        </div>
+      <?php elseif ($request_status === 'failed') : ?>
+        <div class="zc-form-message zc-form-message--error">
+          Message failed to send. Please try again.
+        </div>
+      <?php elseif ($request_status === 'missing_fields') : ?>
+        <div class="zc-form-message zc-form-message--error">
+          Please fill in all required fields.
+        </div>
+      <?php elseif ($request_status === 'invalid_email') : ?>
+        <div class="zc-form-message zc-form-message--error">
+          Please enter a valid email address.
+        </div>
+      <?php elseif ($request_status === 'file_too_large') : ?>
+        <div class="zc-form-message zc-form-message--error">
+          File is too large. Maximum file size is 20MB.
+        </div>
+      <?php elseif ($request_status === 'upload_error') : ?>
+        <div class="zc-form-message zc-form-message--error">
+          File upload failed. Please upload JPG, PNG, or PDF only.
+        </div>
+      <?php elseif ($request_status === 'security_error') : ?>
+        <div class="zc-form-message zc-form-message--error">
+          Security check failed. Refresh the page and try again.
+        </div>
+      <?php elseif ($request_status === 'spam') : ?>
+        <div class="zc-form-message zc-form-message--error">
+          Submission blocked. Please try again.
+        </div>
+      <?php endif; ?>
+
+      <form class="zc-design-request-form" method="post" action="<?php echo esc_url(home_url('/customize/')); ?>" enctype="multipart/form-data">
+        <?php wp_nonce_field('zarvel_customize_form_action', 'zarvel_customize_nonce'); ?>
+
+        <input type="hidden" name="zarvel_customize_form_submit" value="1">
+
+        <div style="position:absolute; left:-9999px; opacity:0; pointer-events:none;">
+          <label for="website_url">Website</label>
+          <input type="text" id="website_url" name="website_url" value="">
+        </div>
 
         <div class="zc-design-request-form__grid">
 
@@ -94,12 +142,12 @@ defined('ABSPATH') || exit;
 
             <div class="zc-form-field">
               <label for="zc_full_name">Full Name <span>*</span></label>
-              <input id="zc_full_name" type="text" name="full_name" placeholder="Enter your full name">
+              <input id="zc_full_name" type="text" name="full_name" placeholder="Enter your full name" required>
             </div>
 
             <div class="zc-form-field">
               <label for="zc_email">Email Address <span>*</span></label>
-              <input id="zc_email" type="email" name="email" placeholder="Enter your email address">
+              <input id="zc_email" type="email" name="email" placeholder="Enter your email address" required>
             </div>
 
             <div class="zc-form-field">
@@ -109,7 +157,7 @@ defined('ABSPATH') || exit;
 
             <div class="zc-form-field">
               <label for="zc_product_type">Product Type <span>*</span></label>
-              <select id="zc_product_type" name="product_type">
+              <select id="zc_product_type" name="product_type" required>
                 <option value="">Select product type</option>
                 <option value="T-Shirts" selected>T-Shirts</option>
                 <option value="Hoodies">Hoodies</option>
@@ -154,10 +202,10 @@ defined('ABSPATH') || exit;
           <div class="zc-design-request-form__right">
 
             <div class="zc-form-field">
-              <label for="zc_upload_file">Upload Logo / Artwork <span>*</span></label>
+              <label for="zc_upload_file">Upload Logo / Artwork</label>
 
               <label class="zc-upload-box" for="zc_upload_file">
-                <input id="zc_upload_file" type="file" name="upload_file" accept=".jpg,.jpeg,.png,.pdf,.ai,.svg">
+                <input id="zc_upload_file" type="file" name="upload_file" accept=".jpg,.jpeg,.png,.pdf">
 
                 <span class="zc-upload-box__icon">
                   <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -170,13 +218,13 @@ defined('ABSPATH') || exit;
                 <strong>Drag and drop your file here</strong>
                 <em>or</em>
                 <span class="zc-upload-box__button">Choose File</span>
-                <small id="zcUploadFileName">Supports: PNG, JPG, SVG, AI, PDF. Max 20MB</small>
+                <small id="zcUploadFileName">Supports: PNG, JPG, PDF. Max 20MB</small>
               </label>
             </div>
 
             <div class="zc-form-field">
               <label for="zc_design_notes">Design Instructions <span>*</span></label>
-              <textarea id="zc_design_notes" name="design_notes" rows="5" placeholder="Tell us about your design idea, placement, colors, text, style, or anything important..."></textarea>
+              <textarea id="zc_design_notes" name="design_notes" rows="5" placeholder="Tell us about your design idea, placement, colors, text, style, or anything important..." required></textarea>
             </div>
 
             <div class="zc-form-field">
@@ -232,7 +280,7 @@ document.addEventListener('DOMContentLoaded', function () {
       if (fileInput.files && fileInput.files.length > 0) {
         fileName.textContent = fileInput.files[0].name;
       } else {
-        fileName.textContent = 'Supports: PNG, JPG, SVG, AI, PDF. Max 20MB';
+        fileName.textContent = 'Supports: PNG, JPG, PDF. Max 20MB';
       }
     });
   }
@@ -335,6 +383,29 @@ document.addEventListener('DOMContentLoaded', function () {
 
 .zc-customize-step--form {
   margin-bottom: 0;
+}
+
+.zc-form-message {
+  max-width: 760px;
+  margin: 0 auto 22px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  line-height: 1.4;
+  font-weight: 800;
+  text-align: center;
+}
+
+.zc-form-message--success {
+  background: #ecfff1;
+  color: #10752f;
+  border: 1px solid #bdebc9;
+}
+
+.zc-form-message--error {
+  background: #fff0ec;
+  color: #b83212;
+  border: 1px solid #ffcbbb;
 }
 
 .zc-design-request-form {
