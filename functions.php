@@ -1,23 +1,26 @@
-<?php
+function zarvel_custom_template_router($template) {
+    if (is_admin()) {
+        return $template;
+    }
 
-function zarvel_creative_assets() {
-    wp_enqueue_style(
-        'zarvel-creative-style',
-        get_stylesheet_uri(),
-        array(),
-        '1.0'
-    );
+    $front_page_template = get_template_directory() . '/pages/front-page.php';
+    $single_product_template = get_template_directory() . '/pages/single-product.php';
+
+    if (is_front_page() && file_exists($front_page_template)) {
+        return $front_page_template;
+    }
+
+    if (
+        (
+            function_exists('is_product') && is_product()
+        ) ||
+        is_singular('product')
+    ) {
+        if (file_exists($single_product_template)) {
+            return $single_product_template;
+        }
+    }
+
+    return $template;
 }
-add_action('wp_enqueue_scripts', 'zarvel_creative_assets');
-
-function zarvel_creative_setup() {
-    add_theme_support('title-tag');
-    add_theme_support('post-thumbnails');
-    add_theme_support('custom-logo');
-
-    register_nav_menus(array(
-        'primary' => 'Primary Menu',
-        'footer'  => 'Footer Menu',
-    ));
-}
-add_action('after_setup_theme', 'zarvel_creative_setup');
+add_filter('template_include', 'zarvel_custom_template_router', 99);
