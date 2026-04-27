@@ -3,9 +3,6 @@ defined('ABSPATH') || exit;
 
 /**
  * Gmail SMTP setup
- *
- * SMTP credentials should come from wp-config.php constants,
- * which should read from your Docker .env file.
  */
 function zarvel_configure_smtp_mailer($phpmailer) {
     if (
@@ -17,10 +14,12 @@ function zarvel_configure_smtp_mailer($phpmailer) {
         !defined('ZARVEL_SMTP_FROM') ||
         !defined('ZARVEL_SMTP_FROM_NAME')
     ) {
+        error_log('Zarvel SMTP error: SMTP constants are missing.');
         return;
     }
 
     if (empty(ZARVEL_SMTP_USER) || empty(ZARVEL_SMTP_PASS)) {
+        error_log('Zarvel SMTP error: SMTP username or password is empty.');
         return;
     }
 
@@ -28,7 +27,7 @@ function zarvel_configure_smtp_mailer($phpmailer) {
 
     $phpmailer->Host       = ZARVEL_SMTP_HOST;
     $phpmailer->SMTPAuth   = true;
-    $phpmailer->Port       = ZARVEL_SMTP_PORT;
+    $phpmailer->Port       = (int) ZARVEL_SMTP_PORT;
     $phpmailer->SMTPSecure = ZARVEL_SMTP_SECURE;
 
     $phpmailer->Username   = ZARVEL_SMTP_USER;
@@ -36,8 +35,9 @@ function zarvel_configure_smtp_mailer($phpmailer) {
 
     $phpmailer->From       = ZARVEL_SMTP_FROM;
     $phpmailer->FromName   = ZARVEL_SMTP_FROM_NAME;
-
     $phpmailer->Sender     = ZARVEL_SMTP_FROM;
+
+    error_log('Zarvel SMTP loaded: using Gmail SMTP.');
 }
 add_action('phpmailer_init', 'zarvel_configure_smtp_mailer');
 
