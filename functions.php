@@ -1,3 +1,4 @@
+<?php
 function zarvel_custom_template_router($template) {
     if (is_admin()) {
         return $template;
@@ -24,3 +25,4 @@ function zarvel_custom_template_router($template) {
     return $template;
 }
 add_filter('template_include', 'zarvel_custom_template_router', 99);
+?>
