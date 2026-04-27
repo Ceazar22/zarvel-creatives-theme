@@ -33,6 +33,40 @@ add_action('wp_enqueue_scripts', 'zarvel_creative_scripts');
 
 
 /**
+ * Gmail SMTP setup
+ * This makes wp_mail() send through Gmail.
+ *
+ * IMPORTANT:
+ * Use a Gmail App Password, not your normal Gmail password.
+ */
+function zarvel_configure_smtp_mailer($phpmailer) {
+    $phpmailer->isSMTP();
+
+    $phpmailer->Host       = 'smtp.gmail.com';
+    $phpmailer->SMTPAuth   = true;
+    $phpmailer->Port       = 587;
+    $phpmailer->SMTPSecure = 'tls';
+
+    $phpmailer->Username   = 'bryanceazartabanas@gmail.com';
+    $phpmailer->Password   = 'ofsx tflh vbbg fllf';
+
+    $phpmailer->From       = 'bryanceazartabanas@gmail.com';
+    $phpmailer->FromName   = 'Zarvel Creatives';
+}
+add_action('phpmailer_init', 'zarvel_configure_smtp_mailer');
+
+
+/**
+ * Log mail errors for debugging.
+ * Check wp-content/debug.log if email fails.
+ */
+function zarvel_log_mail_errors($wp_error) {
+    error_log('Zarvel mail error: ' . print_r($wp_error, true));
+}
+add_action('wp_mail_failed', 'zarvel_log_mail_errors');
+
+
+/**
  * Get current URL path.
  */
 function zarvel_get_current_path() {
@@ -108,7 +142,7 @@ function zarvel_handle_customize_form() {
     }
 
     /**
-     * CHANGE THIS TO YOUR REAL GMAIL.
+     * Recipient Gmail.
      */
     $recipient = 'bryanceazartabanas@gmail.com';
 
@@ -128,10 +162,10 @@ function zarvel_handle_customize_form() {
     $message .= "Sent from: " . home_url('/customize/') . "\n";
 
     /**
-     * Use your domain email as From.
-     * Do not use the customer's Gmail as From or Gmail may reject it.
+     * Since we are sending through Gmail SMTP,
+     * use the same Gmail as the From address.
      */
-    $from_email = 'no-reply@zarvelcreatives.com';
+    $from_email = 'bryanceazartabanas@gmail.com';
 
     $headers = [
         'Content-Type: text/plain; charset=UTF-8',
@@ -144,7 +178,6 @@ function zarvel_handle_customize_form() {
     /**
      * File upload.
      * Safe version for now: JPG, JPEG, PNG, PDF only.
-     * SVG/AI can be risky unless handled carefully.
      */
     if (!empty($_FILES['upload_file']['name'])) {
         $file = $_FILES['upload_file'];
