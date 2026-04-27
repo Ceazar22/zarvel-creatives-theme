@@ -32,6 +32,18 @@ defined('ABSPATH') || exit;
         <div class="zc-form-message zc-form-message--error">
           Please enter a valid email address.
         </div>
+      <?php elseif ($request_status === 'invalid_product') : ?>
+        <div class="zc-form-message zc-form-message--error">
+          Invalid product selected. Please choose a valid product type.
+        </div>
+      <?php elseif ($request_status === 'invalid_logo_status') : ?>
+        <div class="zc-form-message zc-form-message--error">
+          Invalid design option selected. Please choose one of the design options.
+        </div>
+      <?php elseif ($request_status === 'too_many_requests') : ?>
+        <div class="zc-form-message zc-form-message--error">
+          Please wait a minute before sending another request.
+        </div>
       <?php elseif ($request_status === 'file_too_large') : ?>
         <div class="zc-form-message zc-form-message--error">
           File is too large. Maximum file size is 20MB.
@@ -83,13 +95,11 @@ defined('ABSPATH') || exit;
               <label for="zc_product_type">Product Type <span>*</span></label>
               <select id="zc_product_type" name="product_type" required>
                 <option value="">Select product type</option>
-                <option value="T-Shirts">T-Shirts</option>
-                <option value="Hoodies">Hoodies</option>
-                <option value="Mugs">Mugs</option>
-                <option value="Tote Bags">Tote Bags</option>
-                <option value="Phone Cases">Phone Cases</option>
-                <option value="Caps">Caps</option>
-                <option value="Other">Other</option>
+                <option value="t-shirt">T-Shirt</option>
+                <option value="hoodie">Hoodie</option>
+                <option value="mug">Mug</option>
+                <option value="tote-bag">Tote Bag</option>
+                <option value="phone-case">Phone Case</option>
               </select>
             </div>
 
@@ -98,7 +108,7 @@ defined('ABSPATH') || exit;
 
               <div class="zc-logo-option-grid">
                 <label class="zc-logo-option">
-                  <input type="radio" name="logo_status" value="I already have a logo/design" required>
+                  <input type="radio" name="logo_status" value="has-logo" required>
                   <span>
                     <strong>I already have a logo/design</strong>
                     <small>I’ll upload the file for you to use.</small>
@@ -106,7 +116,7 @@ defined('ABSPATH') || exit;
                 </label>
 
                 <label class="zc-logo-option">
-                  <input type="radio" name="logo_status" value="I need you to create the design" required>
+                  <input type="radio" name="logo_status" value="needs-design" required>
                   <span>
                     <strong>I need you to create the design</strong>
                     <small>I’ll explain the idea and style I want.</small>
@@ -114,7 +124,7 @@ defined('ABSPATH') || exit;
                 </label>
 
                 <label class="zc-logo-option">
-                  <input type="radio" name="logo_status" value="I have an idea but no final file" required>
+                  <input type="radio" name="logo_status" value="has-idea-only" required>
                   <span>
                     <strong>I have an idea, but no final file</strong>
                     <small>I need help turning the idea into artwork.</small>
@@ -122,7 +132,6 @@ defined('ABSPATH') || exit;
                 </label>
               </div>
             </div>
-
 
           </div>
 
@@ -153,7 +162,6 @@ defined('ABSPATH') || exit;
               <label for="zc_design_notes">Design Instructions <span>*</span></label>
               <textarea id="zc_design_notes" name="design_notes" rows="7" placeholder="Tell us about your design idea, placement, colors, text, style, or anything important..." required></textarea>
             </div>
-
 
           </div>
 
