@@ -6,11 +6,11 @@ defined('ABSPATH') || exit;
  */
 function zarvel_get_current_path() {
     $request_uri = isset($_SERVER['REQUEST_URI'])
-        ? wp_unslash($_SERVER['REQUEST_URI'])
+        ? sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI']))
         : '';
 
     $request_path = trim((string) wp_parse_url($request_uri, PHP_URL_PATH), '/');
-    $home_path = trim((string) wp_parse_url(home_url('/'), PHP_URL_PATH), '/');
+    $home_path    = trim((string) wp_parse_url(home_url('/'), PHP_URL_PATH), '/');
 
     if ($home_path && strpos($request_path, $home_path) === 0) {
         $request_path = trim(substr($request_path, strlen($home_path)), '/');
@@ -19,9 +19,8 @@ function zarvel_get_current_path() {
     return $request_path;
 }
 
-
 /**
- * Custom template router
+ * Custom template router.
  */
 function zarvel_custom_template_router($template) {
     if (is_admin()) {
