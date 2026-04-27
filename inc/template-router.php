@@ -31,6 +31,7 @@ function zarvel_custom_template_router($template) {
     $single_product_template   = get_template_directory() . '/pages/single-product.php';
     $product_category_template = get_template_directory() . '/pages/product-category.php';
     $customize_template        = get_template_directory() . '/pages/customize.php';
+    $about_template = get_template_directory() . '/pages/about-us.php';
 
     $current_path = zarvel_get_current_path();
 
