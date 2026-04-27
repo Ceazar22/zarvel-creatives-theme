@@ -33,28 +33,25 @@ add_action('wp_enqueue_scripts', 'zarvel_creative_scripts');
 
 
 /**
- * Theme-only custom routes
- * URL: /customize/
+ * Get current URL path.
+ * Example:
+ * https://zarvelcreatives.com/customize/ = customize
  */
-function zarvel_register_theme_routes() {
-    add_rewrite_rule(
-        '^customize/?$',
-        'index.php?zarvel_theme_page=customize',
-        'top'
-    );
+function zarvel_get_current_path() {
+    $request_uri = isset($_SERVER['REQUEST_URI'])
+        ? wp_unslash($_SERVER['REQUEST_URI'])
+        : '';
+
+    $request_path = trim((string) wp_parse_url($request_uri, PHP_URL_PATH), '/');
+
+    $home_path = trim((string) wp_parse_url(home_url('/'), PHP_URL_PATH), '/');
+
+    if ($home_path && strpos($request_path, $home_path) === 0) {
+        $request_path = trim(substr($request_path, strlen($home_path)), '/');
+    }
+
+    return $request_path;
 }
-add_action('init', 'zarvel_register_theme_routes');
-
-
-/**
- * Add custom query var for theme-only pages
- */
-function zarvel_add_theme_query_vars($vars) {
-    $vars[] = 'zarvel_theme_page';
-
-    return $vars;
-}
-add_filter('query_vars', 'zarvel_add_theme_query_vars');
 
 
 /**
@@ -70,16 +67,34 @@ function zarvel_custom_template_router($template) {
     $product_category_template = get_template_directory() . '/pages/product-category.php';
     $customize_template        = get_template_directory() . '/pages/customize.php';
 
-    $theme_page = get_query_var('zarvel_theme_page');
+    $current_path = zarvel_get_current_path();
 
-    if ($theme_page === 'customize' && file_exists($customize_template)) {
+    /**
+     * Theme-only Customize page
+     * URL: /customize/
+     */
+    if ($current_path === 'customize' && file_exists($customize_template)) {
+        global $wp_query;
+
+        if ($wp_query) {
+            $wp_query->is_404 = false;
+        }
+
+        status_header(200);
+
         return $customize_template;
     }
 
+    /**
+     * Homepage
+     */
     if (is_front_page() && file_exists($front_page_template)) {
         return $front_page_template;
     }
 
+    /**
+     * Single WooCommerce product page
+     */
     if (
         ((function_exists('is_product') && is_product()) || is_singular('product')) &&
         file_exists($single_product_template)
@@ -87,6 +102,9 @@ function zarvel_custom_template_router($template) {
         return $single_product_template;
     }
 
+    /**
+     * Single product category page
+     */
     if (
         function_exists('is_product_category') &&
         is_product_category() &&
