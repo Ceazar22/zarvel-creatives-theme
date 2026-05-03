@@ -68,8 +68,7 @@
         </div>
 
         <a href="<?php echo esc_url(home_url('/customize')); ?>" class="zc-nav-link">CUSTOMIZE</a>
-        <a href="<?php echo esc_url(home_url('/best-sellers')); ?>" class="zc-nav-link">BEST SELLERS</a>
-        <a href="<?php echo esc_url(home_url('/about')); ?>" class="zc-nav-link">ABOUT</a>
+        <a href="<?php echo esc_url(home_url('/about-us')); ?>" class="zc-nav-link">ABOUT</a>
         <a href="<?php echo esc_url(home_url('/contact')); ?>" class="zc-nav-link">CONTACT</a>
 
       </nav>

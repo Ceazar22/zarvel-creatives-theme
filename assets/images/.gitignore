@@ -1,0 +1,14 @@
+node_modules/
+.env
+*.log
+.DS_Store
+Thumbs.db
+
+# Build/cache folders
+.cache/
+.tmp/
+.vscode/
+
+# Do not commit WordPress core or uploads if accidentally added
+wp-config.php
+wp-content/uploads/

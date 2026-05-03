@@ -32,6 +32,7 @@ function zarvel_custom_template_router($template) {
     $product_category_template = get_template_directory() . '/pages/product-category.php';
     $customize_template        = get_template_directory() . '/pages/customize.php';
     $about_template            = get_template_directory() . '/pages/about-us.php';
+    $contact_template          = get_template_directory() . '/pages/contact.php';
 
     $current_path = zarvel_get_current_path();
 
@@ -65,6 +66,22 @@ function zarvel_custom_template_router($template) {
         status_header(200);
 
         return $about_template;
+    }
+
+    /**
+     * Theme-only Contact page.
+     * URL: /contact/
+     */
+    if ($current_path === 'contact' && file_exists($contact_template)) {
+        global $wp_query;
+
+        if ($wp_query) {
+            $wp_query->is_404 = false;
+        }
+
+        status_header(200);
+
+        return $contact_template;
     }
 
     /**

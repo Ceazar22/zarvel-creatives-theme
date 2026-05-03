@@ -17,29 +17,29 @@ defined('ABSPATH') || exit;
 
       <article class="zc-about-team-card">
         <div class="zc-about-team-card__image">
-          <img src="<?php echo esc_url(get_template_directory_uri() . '/assets/images/team-bryan.jpg'); ?>" alt="Bryan D.">
+          <img src="<?php echo esc_url(get_template_directory_uri() . '/assets/images/bryan.png'); ?>" alt="Bryan">
         </div>
 
-        <h3>Bryan D.</h3>
-        <span>Founder & Designer</span>
+        <h3>Bryan T.</h3>
+        <span>Co-Founder & Web Dev</span>
 
         <p>
           Loves design, coffee, and turning ideas into reality.
         </p>
 
         <div class="zc-about-team-card__socials">
-          <a href="#" aria-label="Facebook">f</a>
-          <a href="#" aria-label="Instagram">◎</a>
-          <a href="#" aria-label="LinkedIn">in</a>
+          <a href="#" aria-label="Facebook" target="_blank" rel="noopener noreferrer">f</a>
+          <a href="#" aria-label="Instagram" target="_blank" rel="noopener noreferrer">◎</a>
+          <a href="https://www.linkedin.com/in/bryan-ceazar-tabanas-0a8b83232/" aria-label="LinkedIn" target="_blank" rel="noopener noreferrer">in</a>
         </div>
       </article>
 
       <article class="zc-about-team-card">
         <div class="zc-about-team-card__image">
-          <img src="<?php echo esc_url(get_template_directory_uri() . '/assets/images/team-jessica.jpg'); ?>" alt="Jessica R.">
+          <img src="<?php echo esc_url(get_template_directory_uri() . '/assets/images/joyce.png'); ?>" alt="Joyce">
         </div>
 
-        <h3>Jessica R.</h3>
+        <h3>Joyce T,</h3>
         <span>Operations Lead</span>
 
         <p>
@@ -47,18 +47,18 @@ defined('ABSPATH') || exit;
         </p>
 
         <div class="zc-about-team-card__socials">
-          <a href="#" aria-label="Facebook">f</a>
-          <a href="#" aria-label="Instagram">◎</a>
-          <a href="#" aria-label="LinkedIn">in</a>
+          <a href="#" aria-label="Facebook" target="_blank" rel="noopener noreferrer">f</a>
+          <a href="#" aria-label="Instagram" target="_blank" rel="noopener noreferrer">◎</a>
+          <a href="https://www.linkedin.com/in/joyce-reyvel-tenorio/" aria-label="LinkedIn" target="_blank" rel="noopener noreferrer">in</a>
         </div>
       </article>
 
       <article class="zc-about-team-card">
         <div class="zc-about-team-card__image">
-          <img src="<?php echo esc_url(get_template_directory_uri() . '/assets/images/team-mark.jpg'); ?>" alt="Mark S.">
+          <img src="<?php echo esc_url(get_template_directory_uri() . '/assets/images/gideon.png'); ?>" alt="Gideon">
         </div>
 
-        <h3>Mark S.</h3>
+        <h3>Gideon S.</h3>
         <span>Production Head</span>
 
         <p>
@@ -66,18 +66,18 @@ defined('ABSPATH') || exit;
         </p>
 
         <div class="zc-about-team-card__socials">
-          <a href="#" aria-label="Facebook">f</a>
-          <a href="#" aria-label="Instagram">◎</a>
-          <a href="#" aria-label="LinkedIn">in</a>
+          <a href="#" aria-label="Facebook" target="_blank" rel="noopener noreferrer">f</a>
+          <a href="#" aria-label="Instagram" target="_blank" rel="noopener noreferrer">◎</a>
+          <a href="https://www.linkedin.com/in/gideonsilva/" aria-label="LinkedIn" target="_blank" rel="noopener noreferrer">in</a>
         </div>
       </article>
 
       <article class="zc-about-team-card">
         <div class="zc-about-team-card__image">
-          <img src="<?php echo esc_url(get_template_directory_uri() . '/assets/images/team-dani.jpg'); ?>" alt="Dani L.">
+          <img src="<?php echo esc_url(get_template_directory_uri() . '/assets/images/carl.png'); ?>" alt="Carl">
         </div>
 
-        <h3>Dani L.</h3>
+        <h3>Carl G.</h3>
         <span>Customer Support</span>
 
         <p>
@@ -85,9 +85,9 @@ defined('ABSPATH') || exit;
         </p>
 
         <div class="zc-about-team-card__socials">
-          <a href="#" aria-label="Facebook">f</a>
-          <a href="#" aria-label="Instagram">◎</a>
-          <a href="#" aria-label="LinkedIn">in</a>
+          <a href="#" aria-label="Facebook" target="_blank" rel="noopener noreferrer">f</a>
+          <a href="#" aria-label="Instagram" target="_blank" rel="noopener noreferrer">◎</a>
+          <a href="https://www.linkedin.com/in/carl-hason-gerale/" aria-label="LinkedIn" target="_blank" rel="noopener noreferrer">in</a>
         </div>
       </article>
 
@@ -104,7 +104,7 @@ defined('ABSPATH') || exit;
 }
 
 .zc-about-team__container {
-  width: min(100% - 40px, 1120px);
+  width: min(100% - 40px, 1280px);
   margin: 0 auto;
 }
 
@@ -164,8 +164,7 @@ defined('ABSPATH') || exit;
 
 .zc-about-team-card__image img {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: 100%; 
   display: block;
 }
 

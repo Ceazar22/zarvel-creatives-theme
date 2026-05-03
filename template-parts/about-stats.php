@@ -68,7 +68,7 @@ defined('ABSPATH') || exit;
 }
 
 .zc-about-stats__container {
-  width: min(100% - 40px, 1120px);
+  width: min(100% - 40px, 1280px);
   margin: 0 auto;
 }
 
